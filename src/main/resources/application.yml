@@ -1,0 +1,25 @@
+server:
+  port: 8081   # 메인 백엔드(예: 8080)와 분리. 메인 백엔드가 REST로 이 서비스를 호출
+
+spring:
+  application:
+    name: bmc-ai-service
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY}
+  model: claude-sonnet-4-6   # BMC 생성/분석에 균형 좋은 모델. 품질 더 필요하면 opus 계열로
+  max-tokens: 4096
+
+voyage:
+  api-key: ${VOYAGE_API_KEY}
+  model: voyage-3.5
+  dimension: 1024            # voyage-3.5 기본 차원. 모델을 바꾸면 Qdrant 컬렉션 차원도 동일하게 맞춰야 함
+
+qdrant:
+  host: ${QDRANT_HOST:localhost}
+  port: ${QDRANT_PORT:6334}  # gRPC 포트 (REST 는 6333)
+  collection: competitor_services
+
+rag:
+  top-k: 5         # 경쟁 서비스 검색 시 가져올 유사 항목 수
+  min-score: 0.5   # 코사인 유사도 최소 임계값

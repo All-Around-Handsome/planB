@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.bmc'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+repositories { mavenCentral() }
+
+// ※ LangChain4j 버전은 Maven Central에서 최신 안정/베타 버전을 확인 후 맞춰주세요.
+//   코어/anthropic 은 정식(1.x), voyage/qdrant 통합 모듈은 보통 -beta 접미사가 붙습니다.
+ext {
+    lc4j        = '1.13.0'        // langchain4j 코어 + anthropic
+    lc4jBeta    = '1.13.0-beta9'  // voyage-ai, qdrant 통합 모듈
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // LangChain4j core (AiServices, RAG)
+    implementation "dev.langchain4j:langchain4j:${lc4j}"
+    // Claude (Anthropic) LLM
+    implementation "dev.langchain4j:langchain4j-anthropic:${lc4j}"
+    // Voyage AI 임베딩
+    implementation "dev.langchain4j:langchain4j-voyage-ai:${lc4jBeta}"
+    // Qdrant 벡터 스토어
+    implementation "dev.langchain4j:langchain4j-qdrant:${lc4jBeta}"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') { useJUnitPlatform() }
+
+// make.jar 대응: 일반 bootJar 사용 (build/libs/bmc-ai-service-0.0.1-SNAPSHOT.jar)
