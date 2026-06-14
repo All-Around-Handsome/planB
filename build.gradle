@@ -1,0 +1,58 @@
+plugins {
+	id 'java'                                                          // Java 프로젝트임을 선언
+	id 'org.springframework.boot' version '3.5.14'                    // Spring Boot 플러그인
+	id 'io.spring.dependency-management' version '1.1.7'              // 의존성 버전 자동 관리
+}
+
+group = 'com.imagineers'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Web - REST API 만드는 핵심 라이브러리
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Spring Data JPA - DB 연동 라이브러리
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Spring Security - 인증/인가 처리 라이브러리
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// Swagger - API 문서 자동 생성
+	// Spring Boot 3.5.x 버전은 2.8.0 이상 사용해야 함!
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0'
+
+	// MySQL 드라이버 - Java와 MySQL 연결 다리
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// Lombok - getter, setter, constructor 자동 생성
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// ===== JWT (jjwt 0.12.6) =====
+	// jjwt-api: 우리가 코드에서 직접 사용하는 클래스(Jwts 등)를 제공
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	// jjwt-impl: 실제 구현체. 실행할 때만 필요해서 runtimeOnly
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	// jjwt-jackson: 토큰 안의 JSON을 처리하는 데 필요. 역시 실행할 때만 필요
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+	// 테스트
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testCompileOnly 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
