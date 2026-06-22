@@ -76,7 +76,7 @@ function IdeaPage() {
       <div className="w-full bg-white flex justify-center overflow-x-hidden">
         <div className="w-full max-w-[1440px] flex">
           {/* 왼쪽 STEP 사이드바 */}
-          <Sidebar />
+          <Sidebar activeStep="idea" />
 
           {/* 가운데 프로필/이동 메뉴 */}
           <ProjectNav />
