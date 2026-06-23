@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   ShieldCheck,
@@ -19,6 +20,7 @@ function IdeaPage() {
   const [ideaContent, setIdeaContent] = useState("");
   const [selectedStep, setSelectedStep] = useState("idea");
   const [searchOption, setSearchOption] = useState("withSearch");
+  const navigate = useNavigate();
 
   const stepOptions = [
     {
@@ -63,12 +65,20 @@ function IdeaPage() {
   ];
 
   const handleSubmit = () => {
-    console.log({
+    const projectData = {
       ideaTitle,
       ideaContent,
       selectedStep,
       searchOption,
-    });
+    };
+
+    localStorage.setItem("planb_project", JSON.stringify(projectData));
+
+    if (searchOption === "withSearch") {
+      navigate("/explore");
+    } else {
+      navigate("/bmc/create");
+    }
   };
 
   return (

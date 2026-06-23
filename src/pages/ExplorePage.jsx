@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -20,16 +20,24 @@ import CompetitorListPanel from "../components/CompetitorListPanel";
 function ExplorePage() {
   const navigate = useNavigate();
 
-  /**
-   * 지금은 프론트 디자인용 임시 프로젝트 데이터
-   * 나중에는 백엔드에서 현재 projectId 기준으로 받아오면 됨
-   */
-  const project = {
-    ideaTitle: "아이디어 페이지에서 입력한 제목이 표시됩니다",
-    ideaContent:
-      "아이디어 페이지에서 입력한 아이디어 내용이 이 영역에 표시됩니다.",
+  const [project, setProject] = useState({
+    ideaTitle: "",
+    ideaContent: "",
+    selectedStep: "idea",
+    searchOption: "withSearch",
     exploreResult: null,
-  };
+  });
+
+  useEffect(() => {
+    const savedProject = localStorage.getItem("planb_project");
+
+    if (savedProject) {
+      setProject({
+        ...JSON.parse(savedProject),
+        exploreResult: null,
+      });
+    }
+  }, []);
 
   const [isSearching, setIsSearching] = useState(false);
 
