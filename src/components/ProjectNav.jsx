@@ -2,6 +2,7 @@ import {
   Home,
   Lightbulb,
   Search,
+  FileText,
   BarChart3,
   User,
 } from "lucide-react";
@@ -28,8 +29,13 @@ function ProjectNav() {
       path: "/explore",
     },
     {
+      icon: <FileText size={24} />,
+      label: "BMC 생성",
+      path: "/bmc/create",
+    },
+    {
       icon: <BarChart3 size={24} />,
-      label: "분석",
+      label: "BMC 분석",
       path: "/bmc/analyze",
     },
     {
