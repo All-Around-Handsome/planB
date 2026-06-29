@@ -81,4 +81,11 @@ public class BmcRecord {
         this.validityScore = validityScore;
         this.scoreReason = scoreReason;
     }
+
+    // BMC 항목(item)을 이 record에 추가한다.
+    // 양방향 연관관계라, item에도 "내 부모는 이 record"라고 설정해줘야 한다.
+    public void addItem(BmcItem item) {
+        this.items.add(item);        // record의 items 목록에 추가
+        item.setBmcRecord(this);     // item에게 "네 부모는 나야" 설정
+    }
 }

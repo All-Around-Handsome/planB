@@ -54,4 +54,9 @@ public class BmcItem {
         if (content != null) this.content = content;
         if (memo != null)    this.memo = memo;
     }
+
+    // BmcRecord와의 양방향 연관관계 설정용 (addItem에서 호출됨)
+    public void setBmcRecord(BmcRecord bmcRecord) {
+        this.bmcRecord = bmcRecord;
+    }
 }
