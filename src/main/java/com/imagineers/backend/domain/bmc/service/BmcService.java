@@ -17,6 +17,8 @@ import com.imagineers.backend.domain.bmc.entity.BmcAction;
 import com.imagineers.backend.domain.bmc.entity.BmcRisk;
 import com.imagineers.backend.global.enums.BmcType;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.imagineers.backend.domain.bmc.entity.BmcItem;
+import com.imagineers.backend.domain.bmc.repository.BmcItemRepository;
 
 /**
  * BMC 저장/관리 로직.
@@ -29,7 +31,8 @@ public class BmcService {
 
     private final BmcRecordRepository bmcRecordRepository;
     private final UserRepository userRepository;
-    private final LimitService limitService;  // 방금 만든 횟수 제한 서비스 재사용!
+    private final LimitService limitService;
+    private final BmcItemRepository bmcItemRepository;
 
     /**
      * BMC 생성 결과 저장 (G-004)
@@ -131,5 +134,52 @@ public class BmcService {
         // 8. record 저장 → cascade로 item/risk/action 전부 자동 저장
         BmcRecord saved = bmcRecordRepository.save(bmcRecord);
         return saved.getId();
+    }
+
+    /**
+     * BMC 삭제 (P-003)
+     * 본인 소유의 BMC만 삭제할 수 있다.
+     * @param userId 요청한 사용자 (토큰에서 추출)
+     * @param bmcRecordId 삭제할 BMC의 id
+     */
+    public void deleteBmc(Long userId, Long bmcRecordId) {
+        // 1. 삭제할 BMC를 찾는다. 없으면 404
+        BmcRecord bmcRecord = bmcRecordRepository.findById(bmcRecordId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 2. 본인 소유인지 확인 (핵심 보안 체크!)
+        //    이 BMC 주인의 id와 요청자 id가 다르면 → 남의 것이니 거부
+        if (!bmcRecord.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        // 3. 삭제. cascade + orphanRemoval 덕분에
+        //    딸린 item/risk/action도 자동으로 함께 삭제된다.
+        bmcRecordRepository.delete(bmcRecord);
+    }
+
+    /**
+     * BMC 항목 수정 (B-003)
+     * 본인 소유 BMC의 항목만 수정할 수 있다.
+     * @param userId 요청한 사용자
+     * @param itemId 수정할 항목(BmcItem)의 id
+     * @param content 새 내용 (null이면 내용은 안 바꿈)
+     * @param memo 새 메모 (null이면 메모는 안 바꿈)
+     */
+    public void updateItem(Long userId, Long itemId, String content, String memo) {
+        // 1. 수정할 항목을 찾는다. 없으면 404
+        BmcItem item = bmcItemRepository.findById(itemId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 2. 본인 소유인지 확인
+        //    item → 속한 record → 그 record의 주인 id 가 요청자와 같아야 함
+        Long ownerId = item.getBmcRecord().getUser().getId();
+        if (!ownerId.equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        // 3. 수정. 엔티티의 update가 null이 아닌 값만 골라 바꿔줌.
+        //    @Transactional이라 save 안 해도 변경 감지로 자동 반영됨!
+        item.update(content, memo);
     }
 }
