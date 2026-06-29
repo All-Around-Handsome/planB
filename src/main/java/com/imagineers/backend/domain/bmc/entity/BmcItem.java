@@ -59,4 +59,6 @@ public class BmcItem {
     public void setBmcRecord(BmcRecord bmcRecord) {
         this.bmcRecord = bmcRecord;
     }
+
+
 }

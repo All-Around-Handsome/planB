@@ -38,4 +38,9 @@ public class BmcAction {
         this.termType = termType;
         this.orderIndex = orderIndex;
     }
+
+    // 양방향 연관관계 설정용 (addAction에서 호출됨)
+    public void setBmcRecord(BmcRecord bmcRecord) {
+        this.bmcRecord = bmcRecord;
+    }
 }

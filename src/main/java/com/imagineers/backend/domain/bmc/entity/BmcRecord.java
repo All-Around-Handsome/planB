@@ -88,4 +88,16 @@ public class BmcRecord {
         this.items.add(item);        // record의 items 목록에 추가
         item.setBmcRecord(this);     // item에게 "네 부모는 나야" 설정
     }
+
+    // 리스크를 이 record에 추가 (양방향 연관관계 연결)
+    public void addRisk(BmcRisk risk) {
+        this.risks.add(risk);
+        risk.setBmcRecord(this);
+    }
+
+    // 액션을 이 record에 추가 (양방향 연관관계 연결)
+    public void addAction(BmcAction action) {
+        this.actions.add(action);
+        action.setBmcRecord(this);
+    }
 }

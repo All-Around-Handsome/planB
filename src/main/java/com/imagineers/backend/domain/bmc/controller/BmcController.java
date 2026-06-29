@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.Map;
+import com.imagineers.backend.domain.bmc.dto.BmcAnalysisRequest;
 
 /**
  * BMC 관련 API 입구.
@@ -33,6 +33,19 @@ public class BmcController {
     ) {
         Long bmcRecordId = bmcService.saveBmc(userId, request);
         // 응답: { "bmcRecordId": 1 } 형태로 반환
+        return ApiResponse.success(Map.of("bmcRecordId", bmcRecordId));
+    }
+
+    /**
+     * BMC 분석 결과 저장 (N-014)
+     * 로그인 필요
+     */
+    @PostMapping("/analysis")  // 최종 주소: POST /api/bmc/analysis
+    public ApiResponse<Map<String, Long>> saveAnalysis(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody BmcAnalysisRequest request
+    ) {
+        Long bmcRecordId = bmcService.saveAnalysis(userId, request);
         return ApiResponse.success(Map.of("bmcRecordId", bmcRecordId));
     }
 }

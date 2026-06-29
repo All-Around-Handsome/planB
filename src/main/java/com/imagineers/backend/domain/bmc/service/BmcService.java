@@ -12,6 +12,11 @@ import com.imagineers.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.imagineers.backend.domain.bmc.dto.BmcAnalysisRequest;
+import com.imagineers.backend.domain.bmc.entity.BmcAction;
+import com.imagineers.backend.domain.bmc.entity.BmcRisk;
+import com.imagineers.backend.global.enums.BmcType;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * BMC 저장/관리 로직.
@@ -63,6 +68,68 @@ public class BmcService {
         BmcRecord saved = bmcRecordRepository.save(bmcRecord);
 
         // 6. 저장된 id 반환
+        return saved.getId();
+    }
+
+    /**
+     * BMC 분석 결과 저장 (N-014)
+     * G-004와 비슷하지만, 점수 + 리스크 + 액션까지 저장한다.
+     * @param userId  요청한 사용자
+     * @param request 프론트가 보낸 분석 데이터
+     * @return 저장된 BmcRecord의 id
+     */
+    public Long saveAnalysis(Long userId, BmcAnalysisRequest request) {
+        // 1. 분석 횟수 제한 체크 + 증가 (generation이 아니라 analysis!)
+        limitService.checkAndIncrementAnalysis(userId);
+
+        // 2. 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 3. BmcRecord 생성 (분석이므로 bmcType은 DIRECT_ANALYSIS로 고정)
+        BmcRecord bmcRecord = BmcRecord.builder()
+                .user(user)
+                .ideaText(request.ideaText())
+                .stage(request.stage())
+                .bmcType(BmcType.DIRECT_ANALYSIS)
+                .build();
+
+        // 4. 타당성 점수 + 근거 저장 (G-004엔 없던 부분, N-011)
+        bmcRecord.updateAnalysisResult(request.validityScore(), request.scoreReason());
+
+        // 5. 9항목 추가 (G-004와 동일)
+        request.items().forEach(itemRequest -> {
+            BmcItem item = BmcItem.builder()
+                    .itemType(itemRequest.itemType())
+                    .content(itemRequest.content())
+                    .build();
+            bmcRecord.addItem(item);
+        });
+
+        // 6. 리스크 추가 (N-012) - order_index는 순서대로 0,1,2...
+        AtomicInteger riskOrder = new AtomicInteger(0);
+        request.risks().forEach(riskRequest -> {
+            BmcRisk risk = BmcRisk.builder()
+                    .riskContent(riskRequest.riskContent())
+                    .responseContent(riskRequest.responseContent())
+                    .orderIndex(riskOrder.getAndIncrement())  // 0,1,2...
+                    .build();
+            bmcRecord.addRisk(risk);
+        });
+
+        // 7. 액션 추가 (N-013) - 역시 order_index 순서대로
+        AtomicInteger actionOrder = new AtomicInteger(0);
+        request.actions().forEach(actionRequest -> {
+            BmcAction action = BmcAction.builder()
+                    .actionContent(actionRequest.actionContent())
+                    .termType(actionRequest.termType())
+                    .orderIndex(actionOrder.getAndIncrement())
+                    .build();
+            bmcRecord.addAction(action);
+        });
+
+        // 8. record 저장 → cascade로 item/risk/action 전부 자동 저장
+        BmcRecord saved = bmcRecordRepository.save(bmcRecord);
         return saved.getId();
     }
 }
