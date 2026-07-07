@@ -4,9 +4,9 @@ function Textarea({
   value,
   onChange,
   disabled = false,
-  rows = 6,
-  limit = 500,
-  maxLimit = 750,
+  rows = 12,
+  limit = 1000,
+  maxLimit = 1500,
 }) {
   const isOverLimit = value.length > limit;
 

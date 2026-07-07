@@ -1,44 +1,24 @@
-# planB
+# Frontend 실행 방법
 
-## 브랜치 구조
+## 1. 사전 준비
 
-```
-main        ← 배포용 (PM만 머지)
-develop     ← 개발 통합 브랜치
-├── frontend  ← 프론트엔드 전용
-├── backend   ← 백엔드 전용
-└── ai        ← AI 전용
-```
+- Node.js 설치
 
-## 개발 규칙
-
-### 1. 작업 시작
+## 2. 실행
 
 ```bash
-git checkout 본인브랜치
-git pull origin 본인브랜치
-# 예: git checkout frontend && git pull origin frontend
+npm install
+npm run dev
 ```
 
-### 2. 작업 완료 후 develop에 머지
+## 3. 접속
+
+- Local: http://localhost:5173
+
+## 4. 같은 네트워크에서 실행
 
 ```bash
-git checkout develop
-git pull origin develop
-git merge 본인브랜치
-git push origin develop
+npm run dev -- --host
 ```
 
-### 3. 브랜치 네이밍 (기능별 세부 브랜치가 필요한 경우)
-
-| 구분 | 형식 | 예시 |
-|------|------|------|
-| 기능 개발 | `feat/영역/기능명` | `feat/frontend/login-page` |
-| 버그 수정 | `fix/영역/설명` | `fix/backend/auth-error` |
-| 긴급 수정 | `hotfix/설명` | `hotfix/db-connection` |
-
-### 4. 주의사항
-
-- **main에 직접 push 금지** (PR + 승인 필수)
-- develop에 머지 전 `git pull`로 최신 상태 유지
-- 공통 파일(`.env`, 설정 등) 수정 시 팀에 미리 공유
+- 터미널에 표시되는 **Network** 주소로 접속
