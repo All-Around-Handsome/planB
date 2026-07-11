@@ -114,7 +114,7 @@ Authorization: Bearer {accessToken}
 - client_id(카카오 REST API 키, 구글 client-id)를 프론트에 전달
 - 연동 테스트 시 백엔드 서버 실행 (`localhost:8080`)
 
-백엔드 로그인 API는 이미 구현·검증 완료 상태입니다 (API.md 참고)
+백엔드 로그인 API는 이미 구현·검증 완료 상태입니다. (API.md 참고)
 
 ---
 
