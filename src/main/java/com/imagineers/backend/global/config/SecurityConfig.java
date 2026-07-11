@@ -34,8 +34,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -69,18 +69,28 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * CORS 설정: 어떤 출처(프론트)의 요청을 허용할지 정의한다.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://localhost:5173"
-        ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 허용할 프론트 주소 (React 개발 서버)
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // 허용할 HTTP 메서드
+        configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
+
+        // 허용할 요청 헤더 (Authorization 등 모두 허용)
+        configuration.setAllowedHeaders(List.of("*"));
+
+        // 인증 정보(토큰 등) 포함 요청 허용
+        configuration.setAllowCredentials(true);
+
+        // 위 설정을 모든 경로(/**)에 적용
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
