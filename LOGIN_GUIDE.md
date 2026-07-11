@@ -145,3 +145,16 @@ Authorization: Bearer {accessToken}
 
 ## 참고 문서
 - API 명세: `API.md`
+
+## 연동 참고 값 (개발 환경)
+
+프론트에서 사용할 값입니다. (client_id는 공개 가능한 값)
+
+| 항목 | 값 |
+|------|-----|
+| 카카오 client_id | `18ec3a75155641640f454fa82a6170c6` |
+| 구글 client_id | `750867485309-qps17t4ocnau5jdg9lrqb1f1dlfu33kj.apps.googleusercontent.com` |
+| 카카오 redirect_uri | `http://localhost:5173/oauth/kakao` |
+| 구글 redirect_uri | `http://localhost:5173/oauth/google` |
+
+> ⚠️ 구글 client-secret은 백엔드 전용 비밀 값이므로 여기 포함하지 않습니다.
