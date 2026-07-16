@@ -1,7 +1,33 @@
+import axios from "axios";
+
 import { Link } from "react-router-dom";
+import { useLogin } from "../contexts/LoginContext.jsx";
 
 function Navbar() {
-  const isLogin = false;
+
+  const { isLogin, logout } = useLogin();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:8080/api/auth/logout",
+        {},
+        {
+          headers: {
+            Authorization:
+              `Bearer ${localStorage.getItem("accessToken")}`
+          }
+        }
+      );
+
+      logout();
+
+      window.location.href = "/";
+
+    } catch (error) {
+      console.error("로그아웃 실패", error);
+    }
+  };
 
   return (
     <nav className="w-full min-w-[1440px] h-20 bg-white border-b border-gray-200">
@@ -42,7 +68,10 @@ function Navbar() {
 
               <div className="w-px h-5 bg-gray-300" />
 
-              <button className="text-gray-500 hover:text-red-500 transition">
+              <button
+                onClick={handleLogout}
+                className="text-gray-500 hover:text-red-500 transition"
+              >
                 로그아웃
               </button>
             </>

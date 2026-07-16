@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
 import axios from "axios";
+import { useLogin } from "../../contexts/LoginContext.jsx";
 
 function KakaoCallback() {
   const isCalled = useRef(false);
+  const { login } = useLogin();
 
   useEffect(() => {
     // React StrictMode 중복 실행 방지
@@ -23,26 +25,19 @@ function KakaoCallback() {
         code: code,
       })
       .then((response) => {
-        const { accessToken, refreshToken } = response.data;
+        const { accessToken, refreshToken } = response.data.data;
 
-        localStorage.setItem(
-          "accessToken",
-          accessToken
-        );
+        // 로그인 상태 저장
+        login(accessToken, refreshToken);
 
-        localStorage.setItem(
-          "refreshToken",
-          refreshToken
-        );
-
-        // 로그인 완료 후 이동
+        // 메인 이동
         window.location.href = "/";
       })
       .catch((error) => {
         console.error("카카오 로그인 실패", error);
       });
 
-  }, []);
+  }, [login]);
 
   return (
     <div className="flex justify-center items-center h-screen">
