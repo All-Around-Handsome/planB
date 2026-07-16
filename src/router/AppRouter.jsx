@@ -10,6 +10,9 @@ import BMCResultPage from "../pages/BMCResultPage";
 import BMCEditPage from "../pages/BMCEditPage";
 import MyPage from "../pages/MyPage";
 
+import KakaoCallback from "../pages/oauth/KakaoCallback";
+import GoogleCallback from "../pages/oauth/GoogleCallback";
+
 import ScrollToTop from "../components/ScrollToTop";
 
 function AppRouter() {
@@ -20,6 +23,11 @@ function AppRouter() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/auth" element={<AuthPage />} />
+
+        {/* OAuth */}
+        <Route path="/oauth/kakao" element={<KakaoCallback />} />
+        <Route path="/oauth/google" element={<GoogleCallback />} />
+
         <Route path="/idea" element={<IdeaPage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/bmc/create" element={<BMCCreatePage />} />
