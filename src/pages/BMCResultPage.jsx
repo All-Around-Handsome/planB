@@ -18,6 +18,8 @@ import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 
+import "../assets/font/PretendardMedium.js";
+
 function BMCResultPage() {
   const navigate = useNavigate();
 
@@ -188,6 +190,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
   const handleDownload = () => {
     try {
       const pdf = new jsPDF("p", "mm", "a4");
+      pdf.setFont("PretendardMedium");
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -209,7 +212,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
         addPageIfNeeded();
 
         pdf.setFontSize(15);
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("PretendardMedium");
         pdf.text(text, margin, y);
 
         y += 10;
@@ -219,7 +222,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
         addPageIfNeeded();
 
         pdf.setFontSize(12);
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont("PretendardMedium");
         pdf.text(text, margin, y);
 
         y += 8;
@@ -227,7 +230,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
 
       const addText = (text) => {
         pdf.setFontSize(10);
-        pdf.setFont("helvetica", "normal");
+        pdf.setFont("PretendardMedium");
 
         const lines = pdf.splitTextToSize(text, maxWidth);
 
@@ -242,12 +245,12 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
 
       // PDF Header
       pdf.setFontSize(16);
-      pdf.setFont("helvetica", "bold");
+      pdf.setFont("PretendardMedium");
       pdf.text("PlanB BMC Analysis Report", margin, y);
       y += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
+      pdf.setFont("PretendardMedium");
       pdf.text(`Idea: ${project.ideaTitle}`, margin, y);
       y += 7;
       pdf.text(`Created At: ${createdAt}`, margin, y);
