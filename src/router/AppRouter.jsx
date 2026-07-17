@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import GuestRoute from "../components/GuestRoute";
+import MemberRoute from "../components/MemberRoute";
+
 import MainPage from "../pages/MainPage";
 import AuthPage from "../pages/AuthPage";
 import IdeaPage from "../pages/IdeaPage";
@@ -22,19 +25,82 @@ function AppRouter() {
 
       <Routes>
         <Route path="/" element={<MainPage />} />
-        <Route path="/auth" element={<AuthPage />} />
+
+        <Route
+          path="/auth"
+          element={
+            <GuestRoute>
+              <AuthPage />
+            </GuestRoute>
+          }
+        />
 
         {/* OAuth */}
         <Route path="/oauth/kakao" element={<KakaoCallback />} />
         <Route path="/oauth/google" element={<GoogleCallback />} />
 
-        <Route path="/idea" element={<IdeaPage />} />
-        <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/bmc/create" element={<BMCCreatePage />} />
-        <Route path="/bmc/analyze" element={<BMCAnalyzePage />} />
-        <Route path="/bmc/result" element={<BMCResultPage />} />
-        <Route path="/bmc/edit" element={<BMCEditPage />} />
-        <Route path="/my" element={<MyPage />} />
+        <Route
+          path="/idea"
+          element={
+            <MemberRoute>
+              <IdeaPage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/explore"
+          element={
+            <MemberRoute>
+              <ExplorePage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/bmc/create"
+          element={
+            <MemberRoute>
+              <BMCCreatePage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/bmc/analyze"
+          element={
+            <MemberRoute>
+              <BMCAnalyzePage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/bmc/result"
+          element={
+            <MemberRoute>
+              <BMCResultPage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/bmc/edit"
+          element={
+            <MemberRoute>
+              <BMCEditPage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/my"
+          element={
+            <MemberRoute>
+              <MyPage />
+            </MemberRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
