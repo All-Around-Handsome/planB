@@ -17,6 +17,8 @@ import ProjectNav from "../components/ProjectNav";
 import ExploreLoading from "../components/ExploreLoading";
 import CompetitorListPanel from "../components/CompetitorListPanel";
 
+import { searchCompetitors } from "../api/competitorApi";
+
 function ExplorePage() {
   const navigate = useNavigate();
 
@@ -41,30 +43,14 @@ function ExplorePage() {
 
   const [isSearching, setIsSearching] = useState(false);
 
+  const [competitors, setCompetitors] = useState([]);
+  const [error, setError] = useState("");
+
   const [hasExploreResult, setHasExploreResult] = useState(
     project.exploreResult !== null
   );
 
   const [isListOpen, setIsListOpen] = useState(false);
-
-  const competitors = [
-    {
-      title: "유사 서비스 1",
-      color: "text-violet-600 bg-violet-50 border-violet-100",
-    },
-    {
-      title: "유사 서비스 2",
-      color: "text-green-600 bg-green-50 border-green-100",
-    },
-    {
-      title: "유사 서비스 3",
-      color: "text-gray-700 bg-gray-100 border-gray-200",
-    },
-    {
-      title: "유사 서비스 4",
-      color: "text-blue-600 bg-blue-50 border-blue-100",
-    },
-  ];
 
   const insights = [
     {
@@ -84,23 +70,31 @@ function ExplorePage() {
     },
   ];
 
-  const similarServices = [
-    { name: "유사 서비스 1" },
-    { name: "유사 서비스 2" },
-    { name: "유사 서비스 3" },
-    { name: "유사 서비스 4" },
-    { name: "유사 서비스 5" },
-    { name: "유사 서비스 6" },
-  ];
-  const previewServices = similarServices.slice(0, 3);
-  const hiddenServiceCount = similarServices.length - previewServices.length;
+  const similarServices = competitors;
 
-  const handleExplore = () => {
-    /**
-     * 지금은 디자인 확인용
-     * 나중에는 현재 projectId + ideaContent를 백엔드/AI로 보내면 됨
-     */
+  const previewServices = similarServices.slice(0, 3);
+  const hiddenServiceCount =
+    similarServices.length - previewServices.length;
+
+  const handleExplore = async () => {
     setIsSearching(true);
+    setError("");
+
+    try {
+      const result = await searchCompetitors(project.ideaContent);
+
+      setCompetitors(result.competitors || []);
+
+      setTimeout(() => {
+        setIsSearching(false);
+        setHasExploreResult(true);
+      }, 3000);
+
+    } catch (e) {
+      console.error(e);
+      setError("경쟁 서비스 분석에 실패했습니다.");
+      setIsSearching(false);
+    }
   };
 
   const handlePrev = () => {
@@ -277,7 +271,7 @@ function ExplorePage() {
                             <div className="flex flex-wrap gap-2 mb-5">
                               {previewServices.map((service, index) => (
                                 <span
-                                  key={service.name || index}
+                                  key={service.serviceName || index}
                                   className="
                                     px-3
                                     py-2
@@ -290,7 +284,7 @@ function ExplorePage() {
                                     border-blue-100
                                   "
                                 >
-                                  {service.name || `유사 서비스 ${index + 1}`}
+                                  {service.serviceName || `유사 서비스 ${index + 1}`}
                                 </span>
                               ))}
 
@@ -347,53 +341,29 @@ function ExplorePage() {
                           </div>
 
                           <div className="p-5">
-                            <div className="flex gap-3 mb-4">
-                              <CheckCircle2
-                                size={22}
-                                className="text-blue-500 shrink-0 mt-1"
-                              />
+                            {competitors.slice(0, 3).map((item, index) => (
+                              <div
+                                key={item.serviceName}
+                                className={`flex gap-3 ${
+                                  index !== competitors.slice(0, 3).length - 1 ? "mb-4" : ""
+                                }`}
+                              >
+                                <CheckCircle2
+                                  size={22}
+                                  className="text-blue-500 shrink-0 mt-1"
+                                />
 
-                              <div>
-                                <h4 className="text-sm font-bold text-gray-900 mb-1">
-                                  AI가 분석한 차별점 1
-                                </h4>
-                                <p className="text-sm text-gray-500 leading-6">
-                                  현재 프로젝트가 유사 서비스와 비교해 가지는 차별점 설명이 표시됩니다.
-                                </p>
+                                <div>
+                                  <h4 className="text-sm font-bold text-gray-900 mb-1">
+                                    {item.serviceName}
+                                  </h4>
+
+                                  <p className="text-sm text-gray-500 leading-6">
+                                    {item.differentiation}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-
-                            <div className="flex gap-3 mb-4">
-                              <CheckCircle2
-                                size={22}
-                                className="text-blue-500 shrink-0 mt-1"
-                              />
-
-                              <div>
-                                <h4 className="text-sm font-bold text-gray-900 mb-1">
-                                  AI가 분석한 차별점 2
-                                </h4>
-                                <p className="text-sm text-gray-500 leading-6">
-                                  기능, 사용자 경험, 시장 접근 방식 등의 비교 분석 결과가 표시됩니다.
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                              <CheckCircle2
-                                size={22}
-                                className="text-blue-500 shrink-0 mt-1"
-                              />
-
-                              <div>
-                                <h4 className="text-sm font-bold text-gray-900 mb-1">
-                                  AI가 분석한 차별점 3
-                                </h4>
-                                <p className="text-sm text-gray-500 leading-6">
-                                  BMC 생성 과정에서 활용할 수 있는 전략적 차별화 포인트가 표시됩니다.
-                                </p>
-                              </div>
-                            </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -482,7 +452,7 @@ function ExplorePage() {
             <CompetitorListPanel
               open={isListOpen}
               onClose={() => setIsListOpen(false)}
-              services={similarServices}
+              services={competitors}
             />
           </main>
         </div>

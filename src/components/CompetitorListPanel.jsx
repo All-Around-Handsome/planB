@@ -60,7 +60,7 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
             <div className="flex flex-col gap-4">
               {services.map((service, index) => (
                 <div
-                  key={service.name || index}
+                  key={service.serviceName || index}
                   className="
                     rounded-2xl
                     border
@@ -76,7 +76,7 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
                       </p>
 
                       <h3 className="text-lg font-bold text-gray-900">
-                        {service.name || `유사 서비스 ${index + 1}`}
+                        {service.serviceName || `유사 서비스 ${index + 1}`}
                       </h3>
                     </div>
 
@@ -104,8 +104,13 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
                       <p className="font-bold text-gray-900 mb-1">
                         서비스 개요
                       </p>
+
                       <p>
-                        AI가 탐색한 유사 서비스의 개요가 표시됩니다.
+                        {service.coreFeatures}
+                      </p>
+
+                      <p className="mt-1">
+                        수익 모델: {service.revenueModel}
                       </p>
                     </div>
 
@@ -114,7 +119,8 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
                         현재 프로젝트와의 유사점
                       </p>
                       <p>
-                        현재 아이디어와 어떤 부분이 유사한지 분석 결과가 표시됩니다.
+                        {service.category} 분야의 서비스이며,{" "}
+                        {service.targetCustomer}을 대상으로 합니다.
                       </p>
                     </div>
 
@@ -123,7 +129,7 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
                         차별화 참고점
                       </p>
                       <p>
-                        BMC 생성 과정에서 참고할 수 있는 차별화 포인트가 표시됩니다.
+                        {service.differentiation}
                       </p>
                     </div>
                   </div>
