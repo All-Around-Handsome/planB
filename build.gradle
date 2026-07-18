@@ -41,3 +41,9 @@ dependencies {
 }
 
 tasks.named('test') { useJUnitPlatform() }
+
+// Korean Windows 등 플랫폼 기본 인코딩이 UTF-8이 아닌 환경에서 한글 리터럴이 깨져
+// "cannot find symbol" 같은 엉뚱한 컴파일 에러가 나는 걸 방지하기 위해 명시적으로 UTF-8 강제
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

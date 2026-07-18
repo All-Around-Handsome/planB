@@ -23,5 +23,5 @@ qdrant:
   collection: competitor_services
 
 rag:
-  top-k: 5
+  top-k: 3
   min-score: 0.5

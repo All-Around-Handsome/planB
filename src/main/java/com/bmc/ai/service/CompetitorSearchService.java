@@ -8,6 +8,8 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class CompetitorSearchService {
+
+    private static final Logger log = LoggerFactory.getLogger(CompetitorSearchService.class);
 
     private final EmbeddingModel embeddingModel;
     private final EmbeddingStore<TextSegment> embeddingStore;
@@ -44,7 +48,19 @@ public class CompetitorSearchService {
                 .maxResults(topK)
                 .minScore(minScore)
                 .build();
-        return embeddingStore.search(request).matches();
+        List<EmbeddingMatch<TextSegment>> matches = embeddingStore.search(request).matches();
+
+        // 실제 유사도 점수 확인용 임시 로그. rag.min-score 튜닝 끝나면 지워도 되고 남겨둬도 무방함
+        // (호출량 많아지면 로그 레벨을 debug로 낮추는 걸 권장).
+        /*
+        log.info("query=[{}] min-score={} matched={}", idea, minScore, matches.size());
+        for (EmbeddingMatch<TextSegment> m : matches) {
+            String name = m.embedded().metadata().getString("name");
+            log.info("  - {} (score={})", name, String.format("%.4f", m.score()));
+        }
+         */
+
+        return matches;
     }
 
     /** S-001 + S-002: 검색 후 Claude 비교 분석까지. */
@@ -62,12 +78,12 @@ public class CompetitorSearchService {
         return matches.stream().map(m -> {
             var meta = m.embedded().metadata();
             return """
-                    - 서비스명: %s
-                      카테고리: %s
-                      핵심기능: %s
-                      타겟고객: %s
-                      수익모델: %s
-                      (유사도: %.3f)""".formatted(
+                    - name: %s
+                      category: %s
+                      coreFeatures: %s
+                      targetCustomer: %s
+                      revenueModel: %s
+                      (score: %.3f)""".formatted(
                     meta.getString("name"),
                     meta.getString("category"),
                     meta.getString("coreFeatures"),
