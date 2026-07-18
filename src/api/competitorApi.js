@@ -1,5 +1,10 @@
+// true: Mock 데이터 사용 (AI 서버 없이 화면 테스트)
+// false: 실제 AI API 연동 데이터 사용
 const USE_MOCK = true;
 
+
+// Mock 응답 데이터
+// AI 서버 응답(Response) 형식과 동일하게 구성
 const mockResponse = {
   competitors: [
     {
@@ -44,12 +49,20 @@ const mockResponse = {
   ],
 };
 
+
 export async function searchCompetitors(idea) {
+
+  // Mock 모드
+  // AI 서버가 없어도 동일한 응답 구조로 프론트 화면 테스트 가능
   if (USE_MOCK) {
     await new Promise((resolve) => setTimeout(resolve, 2500));
     return mockResponse;
   }
 
+
+  // 실제 AI 서버 연동
+  // POST /api/ai/competitors
+  // 사용자가 입력한 아이디어를 기반으로 경쟁 서비스 분석 결과 반환
   const response = await fetch(
     "http://localhost:8081/api/ai/competitors",
     {
@@ -61,9 +74,11 @@ export async function searchCompetitors(idea) {
     }
   );
 
+
   if (!response.ok) {
     throw new Error("경쟁사 분석 실패");
   }
+
 
   return response.json();
 }

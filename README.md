@@ -41,3 +41,16 @@ npm run dev -- --host
 ```
 
 - 터미널에 표시되는 **Network** 주소로 접속
+
+## 7. 경쟁 서비스 탐색 API 연동
+
+현재 개발 환경에서는 AI 서버 없이 화면 테스트를 진행할 수 있도록 Mock 데이터를 사용합니다.
+
+`src/api/competitorApi.js`
+
+```js
+const USE_MOCK = true;
+```
+
+- `true` : Mock 데이터 사용 (AI 서버 미연동 상태에서 테스트)
+- `false` : 실제 AI API 연동 데이터 사용 (AI 서버 응답 결과 표시)
