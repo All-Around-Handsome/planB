@@ -43,10 +43,6 @@ public class BmcService {
      * @return 저장된 BmcRecord의 id
      */
     public Long saveBmc(Long userId, BmcCreateRequest request) {
-        // 1. 횟수 제한 체크 + 증가 (L-001/L-002)
-        //    한도를 넘었으면 여기서 LIMIT_EXCEEDED 예외가 터져 저장이 안 됨
-        limitService.checkAndIncrementGeneration(userId);
-
         // 2. 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
@@ -84,9 +80,6 @@ public class BmcService {
      * @return 저장된 BmcRecord의 id
      */
     public Long saveAnalysis(Long userId, BmcAnalysisRequest request) {
-        // 1. 분석 횟수 제한 체크 + 증가 (generation이 아니라 analysis!)
-        limitService.checkAndIncrementAnalysis(userId);
-
         // 2. 사용자 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));

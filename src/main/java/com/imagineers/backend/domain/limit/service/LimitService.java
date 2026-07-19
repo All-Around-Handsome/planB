@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
+import com.imagineers.backend.domain.limit.dto.LimitCheckResponse;
 
 /**
  * 일일 사용 횟수 제한 로직 (L-001 횟수 추적, L-002 초과 차단).
@@ -65,6 +65,45 @@ public class LimitService {
         }
 
         dailyLimit.incrementAnalysisCount();
+
+    }
+
+    /**
+     * AI 생성 가능 여부 확인 + 증가 (횟수 체크 API용)
+     * 기존 checkAndIncrementGeneration과 달리, 초과해도 예외를 던지지 않고
+     * 결과를 담아 반환한다. (프론트가 AI 호출 전에 물어보는 용도)
+     * @param userId 요청한 사용자
+     * @return 가능 여부 + 남은 횟수
+     */
+    public LimitCheckResponse tryConsumeGeneration(Long userId) {
+        DailyLimit dailyLimit = getOrCreateTodayLimit(userId);
+        int used = dailyLimit.getGenerationCount();
+
+        // 한도 도달? → 카운트 안 올리고 "불가능"으로 응답 (예외 X)
+        if (used >= dailyGenerationLimit) {
+            return new LimitCheckResponse(false, 0, dailyGenerationLimit);
+        }
+
+        // 통과 → 카운트 1 증가
+        dailyLimit.incrementGenerationCount();
+        int remaining = dailyGenerationLimit - (used + 1);  // 증가 후 남은 횟수
+        return new LimitCheckResponse(true, remaining, dailyGenerationLimit);
+    }
+
+    /**
+     * 직접 분석 가능 여부 확인 + 증가 (횟수 체크 API용)
+     */
+    public LimitCheckResponse tryConsumeAnalysis(Long userId) {
+        DailyLimit dailyLimit = getOrCreateTodayLimit(userId);
+        int used = dailyLimit.getAnalysisCount();
+
+        if (used >= dailyAnalysisLimit) {
+            return new LimitCheckResponse(false, 0, dailyAnalysisLimit);
+        }
+
+        dailyLimit.incrementAnalysisCount();
+        int remaining = dailyAnalysisLimit - (used + 1);
+        return new LimitCheckResponse(true, remaining, dailyAnalysisLimit);
     }
 
     /**

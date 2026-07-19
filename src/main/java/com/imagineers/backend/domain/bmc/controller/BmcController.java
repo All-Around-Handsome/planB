@@ -19,6 +19,8 @@ import com.imagineers.backend.domain.bmc.dto.BmcListResponse;
 import com.imagineers.backend.domain.bmc.dto.BmcDetailResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
+import com.imagineers.backend.domain.limit.dto.LimitCheckResponse;
+import com.imagineers.backend.domain.limit.service.LimitService;
 
 /**
  * BMC 관련 API 입구.
@@ -29,6 +31,7 @@ import java.util.List;
 public class BmcController {
 
     private final BmcService bmcService;
+    private final LimitService limitService;
 
     /**
      * BMC 생성 결과 저장 (G-004)
@@ -111,5 +114,30 @@ public class BmcController {
     ) {
         BmcDetailResponse detail = bmcService.getBmcDetail(userId, bmcRecordId);
         return ApiResponse.success(detail);
+    }
+
+    /**
+     * AI 생성 가능 여부 확인 (횟수 체크)
+     * 프론트가 AI 호출 "전에" 부른다. 통과하면 카운트가 1 올라간다.
+     * 주소: POST /api/bmc/check-generation
+     */
+    @PostMapping("/check-generation")
+    public ApiResponse<LimitCheckResponse> checkGeneration(
+            @AuthenticationPrincipal Long userId
+    ) {
+        LimitCheckResponse result = limitService.tryConsumeGeneration(userId);
+        return ApiResponse.success(result);
+    }
+
+    /**
+     * 직접 분석 가능 여부 확인 (횟수 체크)
+     * 주소: POST /api/bmc/check-analysis
+     */
+    @PostMapping("/check-analysis")
+    public ApiResponse<LimitCheckResponse> checkAnalysis(
+            @AuthenticationPrincipal Long userId
+    ) {
+        LimitCheckResponse result = limitService.tryConsumeAnalysis(userId);
+        return ApiResponse.success(result);
     }
 }
