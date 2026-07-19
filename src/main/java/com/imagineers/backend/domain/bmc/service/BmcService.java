@@ -17,8 +17,10 @@ import com.imagineers.backend.domain.bmc.entity.BmcAction;
 import com.imagineers.backend.domain.bmc.entity.BmcRisk;
 import com.imagineers.backend.global.enums.BmcType;
 import java.util.concurrent.atomic.AtomicInteger;
-import com.imagineers.backend.domain.bmc.entity.BmcItem;
 import com.imagineers.backend.domain.bmc.repository.BmcItemRepository;
+import com.imagineers.backend.domain.bmc.dto.BmcListResponse;
+import com.imagineers.backend.domain.bmc.dto.BmcDetailResponse;
+import java.util.List;
 
 /**
  * BMC 저장/관리 로직.
@@ -181,5 +183,43 @@ public class BmcService {
         // 3. 수정. 엔티티의 update가 null이 아닌 값만 골라 바꿔줌.
         //    @Transactional이라 save 안 해도 변경 감지로 자동 반영됨!
         item.update(content, memo);
+    }
+
+    /**
+     * 내 BMC 목록 조회 (P-001)
+     * 로그인한 사용자가 저장한 BMC들을 최신순으로 반환한다.
+     * @param userId 요청한 사용자
+     * @return 간략 정보 목록 (마이페이지용)
+     */
+    @Transactional(readOnly = true)  // 조회만 하므로 readOnly (성능 최적화)
+    public List<BmcListResponse> getMyBmcList(Long userId) {
+        // 이 사용자의 BMC를 최신순으로 조회 (레포지토리에 이미 있는 메서드 활용)
+        // Pageable 없이 전체를 가져오려면 findAll 계열이 필요하므로,
+        // 우선 레포지토리에 맞는 메서드를 사용한다 (아래 3단계에서 메서드 추가)
+        return bmcRecordRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .map(BmcListResponse::from)  // 각 record를 목록 DTO로 변환
+                .toList();
+    }
+
+    /**
+     * BMC 상세 조회 (P-002)
+     * 본인 소유의 BMC 하나를, 아이디어+항목+리스크+액션까지 전부 반환한다.
+     * @param userId 요청한 사용자
+     * @param bmcRecordId 조회할 BMC의 id
+     * @return 전체 내용 (상세 페이지용)
+     */
+    @Transactional(readOnly = true)
+    public BmcDetailResponse getBmcDetail(Long userId, Long bmcRecordId) {
+        // 1. BMC를 찾는다. 없으면 404
+        BmcRecord bmcRecord = bmcRecordRepository.findById(bmcRecordId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 2. 본인 소유인지 확인 (남의 BMC는 못 봄)
+        if (!bmcRecord.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        // 3. record 하나를 통째로 DTO로 변환 (항목/리스크/액션 다 포함)
+        return BmcDetailResponse.from(bmcRecord);
     }
 }

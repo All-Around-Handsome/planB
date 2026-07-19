@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import com.imagineers.backend.domain.bmc.dto.BmcItemUpdateRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
+import com.imagineers.backend.domain.bmc.dto.BmcListResponse;
+import com.imagineers.backend.domain.bmc.dto.BmcDetailResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import java.util.List;
 
 /**
  * BMC 관련 API 입구.
@@ -80,5 +84,32 @@ public class BmcController {
     ) {
         bmcService.updateItem(userId, itemId, request.content(), request.memo());
         return ApiResponse.success(null);
+    }
+
+    /**
+     * 내 BMC 목록 조회 (P-001)
+     * 로그인 필요. 본인이 저장한 BMC들을 최신순으로 반환.
+     * 주소: GET /api/bmc
+     */
+    @GetMapping  // 최종 주소: GET /api/bmc
+    public ApiResponse<List<BmcListResponse>> getMyBmcList(
+            @AuthenticationPrincipal Long userId
+    ) {
+        List<BmcListResponse> list = bmcService.getMyBmcList(userId);
+        return ApiResponse.success(list);
+    }
+
+    /**
+     * BMC 상세 조회 (P-002)
+     * 로그인 필요. 본인 소유만 조회 가능.
+     * 주소 예: GET /api/bmc/3  → 3번 BMC 전체 내용
+     */
+    @GetMapping("/{bmcRecordId}")  // 최종 주소: GET /api/bmc/{id}
+    public ApiResponse<BmcDetailResponse> getBmcDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long bmcRecordId
+    ) {
+        BmcDetailResponse detail = bmcService.getBmcDetail(userId, bmcRecordId);
+        return ApiResponse.success(detail);
     }
 }
