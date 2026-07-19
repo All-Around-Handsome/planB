@@ -1,6 +1,6 @@
 # 이매지니어(Imagineers) 백엔드 API 명세서
 
-프론트엔드 연동용 문서입니다. 백엔드 팀(정우성)이 작성했습니다
+프론트엔드 연동용 문서입니다. 백엔드 팀(정우성)이 작성했습니다.
 
 ---
 
@@ -150,6 +150,10 @@ Authorization: Bearer {accessToken}
 
 ## 2. BMC 저장
 
+> ⚠️ **횟수 차감 안내**: BMC 저장 API는 **일일 횟수를 차감하지 않습니다.**
+> 횟수 차감은 저장 전에 호출하는 **횟수 체크 API(4번 항목)** 에서 이루어집니다.
+> 권장 흐름: `횟수 체크 → (통과 시) AI 호출 → 저장`
+
 ### 2-1. BMC 생성 결과 저장 (AI 자동생성)
 
 | 항목 | 내용 |
@@ -189,9 +193,7 @@ AI가 생성한 BMC 9개 항목을 저장합니다. (AI 호출은 프론트에�
 }
 ```
 
-> 저장된 BMC의 id(`bmcRecordId`)가 반환됩니다. 이후 삭제/수정에 사용하세요.
-
-> **주의**: 하루 생성 한도(5회)를 초과하면 `429 LIMIT_EXCEEDED`가 옵니다.
+> 저장된 BMC의 id(`bmcRecordId`)가 반환됩니다. 이후 조회/삭제/수정에 사용하세요.
 
 ---
 
@@ -244,8 +246,6 @@ AI가 생성한 BMC 9개 항목을 저장합니다. (AI 호출은 프론트에�
 }
 ```
 
-> **주의**: 하루 분석 한도(5회)를 초과하면 `429 LIMIT_EXCEEDED`가 옵니다. (생성 한도와 별개로 카운트됩니다.)
-
 ---
 
 ## 3. BMC 삭제 / 수정
@@ -290,6 +290,7 @@ BMC 하나를 통째로 삭제합니다. (딸린 항목·리스크·액션도 �
 BMC 항목(item) 하나의 내용/메모를 수정합니다. **본인 소유의 항목만** 수정할 수 있습니다.
 
 **주소 예시**: `/api/bmc/items/20` → id가 20인 항목 수정
+(수정할 `itemId`는 상세 조회(6-2) 응답의 각 항목에 포함되어 있습니다.)
 
 **요청 Body** (content, memo 둘 다 선택 — 보낸 것만 수정되고, 안 보낸 건 기존 값 유지)
 ```json
@@ -318,6 +319,159 @@ BMC 항목(item) 하나의 내용/메모를 수정합니다. **본인 소유의 
 **실패 케이스**
 - 존재하지 않는 item id → `404 NOT_FOUND`
 - 남의 항목 수정 시도 → `403 FORBIDDEN`
+
+---
+
+## 4. 횟수 체크 (BMC 생성/분석 전)
+
+> BMC를 만들기 **전에** 호출하여, 오늘 사용 가능한지 확인하고 횟수를 차감합니다.
+> **권장 흐름**: `횟수 체크 API 호출` → `canProceed: true면 AI 호출 진행` → `AI 결과를 저장 API로 저장`
+
+### 4-1. AI 생성 가능 여부 확인
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `POST` |
+| 주소 | `/api/bmc/check-generation` |
+| 인증 | **필요** |
+
+AI 생성을 시작하기 전에 호출합니다. 호출 시 오늘 생성 횟수가 1 차감됩니다.
+
+**요청 Body**: 없음
+
+**응답 (가능)**
+```json
+{
+  "success": true,
+  "data": { "canProceed": true, "remaining": 4, "limit": 5 },
+  "error": null
+}
+```
+
+**응답 (한도 초과)**
+```json
+{
+  "success": true,
+  "data": { "canProceed": false, "remaining": 0, "limit": 5 },
+  "error": null
+}
+```
+
+> 한도를 초과해도 **HTTP 200**으로 응답합니다. `canProceed` 값으로 판단하세요.
+> - `canProceed: true` → AI 호출 진행
+> - `canProceed: false` → 사용자에게 한도 초과 안내
+> - `remaining`: 오늘 남은 횟수 / `limit`: 하루 한도
+
+---
+
+### 4-2. 직접 분석 가능 여부 확인
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `POST` |
+| 주소 | `/api/bmc/check-analysis` |
+| 인증 | **필요** |
+
+직접 분석을 시작하기 전에 호출합니다. 생성과 **별개로** 분석 횟수가 차감됩니다.
+
+**요청 Body**: 없음
+
+**응답**: 4-1과 동일한 형식 (`canProceed`, `remaining`, `limit`)
+
+---
+
+## 5. BMC 조회
+
+### 5-1. 내 BMC 목록 조회
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `GET` |
+| 주소 | `/api/bmc` |
+| 인증 | **필요** |
+
+로그인한 사용자가 저장한 BMC들을 **최신순**으로 반환합니다. 마이페이지 목록용(간략 정보).
+
+**요청 Body**: 없음
+
+**응답 (성공)**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "bmcRecordId": 2,
+      "ideaText": "카페 구독 서비스",
+      "stage": "VALIDATION",
+      "bmcType": "DIRECT_ANALYSIS",
+      "validityScore": 7,
+      "createdAt": "2026-06-29T12:00:00"
+    },
+    {
+      "bmcRecordId": 1,
+      "ideaText": "반려동물 산책 매칭 서비스",
+      "stage": "IDEA",
+      "bmcType": "AI_GENERATED",
+      "validityScore": null,
+      "createdAt": "2026-06-28T09:30:00"
+    }
+  ],
+  "error": null
+}
+```
+
+> 저장된 BMC가 없으면 빈 배열 `[]`이 옵니다.
+> `validityScore`는 직접분석이면 점수, AI생성이면 `null`입니다.
+
+---
+
+### 5-2. BMC 상세 조회
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `GET` |
+| 주소 | `/api/bmc/{bmcRecordId}` |
+| 인증 | **필요** |
+
+BMC 하나의 **전체 내용**을 반환합니다. 아이디어 + 9개 항목 + 리스크 + 액션이 **한 번에** 내려옵니다. 본인 소유만 조회 가능.
+
+**주소 예시**: `/api/bmc/2` → 2번 BMC 전체 내용
+
+**요청 Body**: 없음
+
+**응답 (성공)**
+```json
+{
+  "success": true,
+  "data": {
+    "bmcRecordId": 2,
+    "ideaText": "카페 구독 서비스",
+    "stage": "VALIDATION",
+    "bmcType": "DIRECT_ANALYSIS",
+    "validityScore": 7,
+    "scoreReason": "시장 수요는 있으나 카페 제휴 확보가 관건",
+    "createdAt": "2026-06-29T12:00:00",
+    "items": [
+      { "itemId": 10, "itemType": "VALUE_PROPOSITION", "content": "월정액 무제한 커피", "memo": null },
+      { "itemId": 11, "itemType": "CUSTOMER_SEGMENT", "content": "직장인", "memo": "타겟 구체화 필요" }
+    ],
+    "risks": [
+      { "riskId": 5, "riskContent": "제휴 카페 이탈", "responseContent": "수익 배분 조정", "orderIndex": 0 }
+    ],
+    "actions": [
+      { "actionId": 3, "actionContent": "제휴 카페 10곳 확보", "termType": "SHORT", "orderIndex": 0 }
+    ]
+  },
+  "error": null
+}
+```
+
+> AI생성 BMC는 `risks`, `actions`가 빈 배열 `[]`, `validityScore`/`scoreReason`은 `null`입니다.
+> 직접분석 BMC는 위처럼 모두 채워져 옵니다.
+
+**실패 케이스**
+- 존재하지 않는 id → `404 NOT_FOUND`
+- 남의 BMC 조회 시도 → `403 FORBIDDEN`
 
 ---
 
@@ -363,9 +517,27 @@ BMC 항목(item) 하나의 내용/메모를 수정합니다. **본인 소유의 
 
 ---
 
+## 전체 엔드포인트 요약
+
+| 기능 | 메서드 | 주소 | 인증 |
+|------|--------|------|------|
+| 카카오 로그인 | POST | `/api/auth/kakao` | - |
+| 구글 로그인 | POST | `/api/auth/google` | - |
+| 로그아웃 | POST | `/api/auth/logout` | ✅ |
+| 생성 횟수 체크 | POST | `/api/bmc/check-generation` | ✅ |
+| 분석 횟수 체크 | POST | `/api/bmc/check-analysis` | ✅ |
+| BMC 생성 저장 | POST | `/api/bmc` | ✅ |
+| BMC 분석 저장 | POST | `/api/bmc/analysis` | ✅ |
+| BMC 목록 조회 | GET | `/api/bmc` | ✅ |
+| BMC 상세 조회 | GET | `/api/bmc/{id}` | ✅ |
+| BMC 삭제 | DELETE | `/api/bmc/{id}` | ✅ |
+| BMC 항목 수정 | PATCH | `/api/bmc/items/{itemId}` | ✅ |
+
+---
+
 ## 연동 시 참고사항
 
 1. **CORS**: 백엔드는 `http://localhost:5173`의 요청을 허용하도록 설정되어 있습니다. 프론트 주소가 바뀌면 백엔드에 알려주세요.
-2. **로그인 흐름**: 프론트가 카카오/구글 인가 코드를 받아 백엔드로 전달 → 백엔드가 JWT 반환 → 프론트가 accessToken 저장 → 이후 API 호출 시 `Authorization: Bearer {accessToken}` 헤더 사용.
-3. **redirect_uri**: 로그인 연동 시 카카오/구글 콘솔에 등록된 redirect_uri, 프론트 콜백 주소, 백엔드 설정이 모두 일치해야 합니다. (연동 전 백엔드와 함께 맞춰야 함)
+2. **로그인 흐름**: 프론트가 카카오/구글 인가 코드를 받아 백엔드로 전달 → 백엔드가 JWT 반환 → 프론트가 accessToken 저장 → 이후 API 호출 시 `Authorization: Bearer {accessToken}` 헤더 사용. (자세한 내용은 `LOGIN_GUIDE.md` 참고)
+3. **BMC 생성/분석 흐름**: 횟수 체크(4번) → `canProceed: true`면 AI 호출 → 저장(2번). 횟수는 체크 단계에서 차감됩니다.
 4. **토큰 만료**: accessToken은 1시간 후 만료됩니다. 만료 시 재로그인이 필요합니다.
