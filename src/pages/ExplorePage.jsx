@@ -17,6 +17,8 @@ import ProjectNav from "../components/ProjectNav";
 import ExploreLoading from "../components/ExploreLoading";
 import CompetitorListPanel from "../components/CompetitorListPanel";
 
+import { getProjectData } from "../utils/projectStorage";
+
 import { searchCompetitors } from "../api/competitorApi";
 
 function ExplorePage() {
@@ -31,11 +33,13 @@ function ExplorePage() {
   });
 
   useEffect(() => {
-    const savedProject = localStorage.getItem("planb_project");
+    const savedProject = getProjectData();
+
+    console.log("savedProject", savedProject);
 
     if (savedProject) {
       setProject({
-        ...JSON.parse(savedProject),
+        ...savedProject,
         exploreResult: null,
       });
     }

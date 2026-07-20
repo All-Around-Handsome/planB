@@ -12,6 +12,8 @@ import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import BMCLoading from "../components/BMCLoading";
 
+import { getProjectData } from "../utils/projectStorage";
+
 function BMCCreatePage() {
   const navigate = useNavigate();
 
@@ -26,10 +28,10 @@ function BMCCreatePage() {
   const [isGenerated, setIsGenerated] = useState(false);
 
   useEffect(() => {
-    const savedProject = localStorage.getItem("planb_project");
+    const savedProject = getProjectData();
 
     if (savedProject) {
-      setProject(JSON.parse(savedProject));
+      setProject(savedProject);
     }
   }, []);
 

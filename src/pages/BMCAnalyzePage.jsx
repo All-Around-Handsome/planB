@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkles,
@@ -16,6 +16,8 @@ import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import BMCAnalyzeLoading from "../components/BMCAnalyzeLoading";
+
+import { getProjectData } from "../utils/projectStorage";
 
 function BMCAnalyzePage() {
   const navigate = useNavigate();
@@ -145,6 +147,16 @@ function BMCAnalyzePage() {
     navigate("/bmc/result");
   };
 
+  const [ideaTitle, setIdeaTitle] = useState("");
+
+  useEffect(() => {
+    const savedProject = getProjectData();
+
+    if (savedProject) {
+      setIdeaTitle(savedProject.ideaTitle);
+    }
+  }, []);
+
   return (
     <MainLayout>
       <div className="w-full bg-white flex justify-center overflow-x-hidden">
@@ -157,7 +169,7 @@ function BMCAnalyzePage() {
             {/* 상단 헤더 */}
             <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
               <h1 className="text-2xl font-bold text-gray-900">
-                {project.ideaTitle || "아이디어 제목 입력"}
+                {ideaTitle || "아이디어 제목 입력"}
               </h1>
             </header>
 

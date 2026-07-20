@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
@@ -15,7 +15,23 @@ import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import Textarea from "../components/Textarea";
 
+import { saveProjectData } from "../utils/projectStorage";
+
 function IdeaPage() {
+
+  useEffect(() => {
+    const savedProject = localStorage.getItem("planb_project");
+
+    if (savedProject) {
+      const data = JSON.parse(savedProject);
+
+      setIdeaTitle(data.ideaTitle || "");
+      setIdeaContent(data.ideaContent || "");
+      setSelectedStep(data.selectedStep || "idea");
+      setSearchOption(data.searchOption || "withSearch");
+    }
+  }, []);
+
   const [ideaTitle, setIdeaTitle] = useState("");
   const [ideaContent, setIdeaContent] = useState("");
   const [selectedStep, setSelectedStep] = useState("idea");
@@ -72,13 +88,11 @@ function IdeaPage() {
       searchOption,
     };
 
-    localStorage.setItem("planb_project", JSON.stringify(projectData));
+    console.log("저장", projectData);
 
-    if (searchOption === "withSearch") {
-      navigate("/explore");
-    } else {
-      navigate("/bmc/create");
-    }
+    saveProjectData(projectData);
+
+    navigate("/explore");
   };
 
   return (
@@ -237,7 +251,7 @@ function IdeaPage() {
                 <ShieldCheck size={22} className="shrink-0" />
 
                 <span className="text-[#3D4770] font-medium flex items-center h-full">
-                  입력한 정보는 안전하게 저장되며, 분석 결과는 언제든지 확인할 수 있습니다.
+                  BMC 생성 완료 후 입력한 아이디어가 저장됩니다.
                 </span>
               </div>
 
