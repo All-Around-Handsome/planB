@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
+  ShieldCheck,
   Sparkles,
   ArrowRight,
   RotateCcw,
@@ -407,7 +408,18 @@ function ExplorePage() {
               </div>
             </div>
 
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end px-12 bg-white">
+            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between px-12 bg-white">
+
+              {/* LEFT */}
+              <div className="flex items-center gap-3 h-full">
+                <ShieldCheck size={22} className="shrink-0" />
+
+                <span className="text-[#3D4770] font-medium flex items-center h-full">
+                  BMC 생성 후 탐색 결과가 저장됩니다.
+                </span>
+              </div>
+
+              {/* RIGHT */}
               <div className="flex items-center gap-3">
                 <button
                   onClick={handlePrev}
@@ -452,6 +464,7 @@ function ExplorePage() {
                   <ArrowRight size={18} />
                 </button>
               </div>
+
             </footer>
             <CompetitorListPanel
               open={isListOpen}
