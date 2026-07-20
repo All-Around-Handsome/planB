@@ -9,3 +9,22 @@ export const saveProjectData = (project) => {
     JSON.stringify(project)
   );
 };
+
+export const getDraftData = () => {
+  const data = localStorage.getItem("currentProjectDraft");
+  return data ? JSON.parse(data) : null;
+};
+
+export const saveDraftData = (project) => {
+  localStorage.setItem(
+    "currentProjectDraft",
+    JSON.stringify({
+      ...project,
+      updatedAt: new Date().toISOString(),
+    })
+  );
+};
+
+export const removeDraftData = () => {
+  localStorage.removeItem("currentProjectDraft");
+};

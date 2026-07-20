@@ -14,10 +14,41 @@ import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import Textarea from "../components/Textarea";
+import DraftRestoreModal from "../components/DraftRestoreModal";
 
-import { saveProjectData } from "../utils/projectStorage";
+import {
+  saveProjectData,
+  saveDraftData,
+  removeDraftData,
+} from "../utils/projectStorage";
 
 function IdeaPage() {
+
+  const [ideaTitle, setIdeaTitle] = useState("");
+  const [ideaContent, setIdeaContent] = useState("");
+  const [selectedStep, setSelectedStep] = useState("idea");
+  const [searchOption, setSearchOption] = useState("withSearch");
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [draftData, setDraftData] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const draft = {
+      ideaTitle,
+      ideaContent,
+      selectedStep,
+      searchOption,
+    };
+
+    if (ideaTitle || ideaContent) {
+      saveDraftData(draft);
+    }
+  }, [
+    ideaTitle,
+    ideaContent,
+    selectedStep,
+    searchOption,
+  ]);
 
   useEffect(() => {
     const savedProject = localStorage.getItem("planb_project");
@@ -32,11 +63,14 @@ function IdeaPage() {
     }
   }, []);
 
-  const [ideaTitle, setIdeaTitle] = useState("");
-  const [ideaContent, setIdeaContent] = useState("");
-  const [selectedStep, setSelectedStep] = useState("idea");
-  const [searchOption, setSearchOption] = useState("withSearch");
-  const navigate = useNavigate();
+  useEffect(() => {
+    const draft = localStorage.getItem("currentProjectDraft");
+
+    if (draft) {
+      setDraftData(JSON.parse(draft));
+      setShowDraftModal(true);
+    }
+  }, []);
 
   const stepOptions = [
     {
@@ -80,6 +114,29 @@ function IdeaPage() {
     },
   ];
 
+  const handleRestoreDraft = () => {
+    if (!draftData) return;
+
+    setIdeaTitle(draftData.ideaTitle || "");
+    setIdeaContent(draftData.ideaContent || "");
+    setSelectedStep(draftData.selectedStep || "idea");
+    setSearchOption(draftData.searchOption || "withSearch");
+
+    setShowDraftModal(false);
+  };
+
+
+  const handleNewProject = () => {
+    removeDraftData();
+
+    setIdeaTitle("");
+    setIdeaContent("");
+    setSelectedStep("idea");
+    setSearchOption("withSearch");
+
+    setShowDraftModal(false);
+  };
+
   const handleSubmit = () => {
     const projectData = {
       ideaTitle,
@@ -92,11 +149,18 @@ function IdeaPage() {
 
     saveProjectData(projectData);
 
+    removeDraftData();
+
     navigate("/explore");
   };
 
   return (
     <MainLayout>
+      <DraftRestoreModal
+        open={showDraftModal}
+        onRestore={handleRestoreDraft}
+        onNew={handleNewProject}
+      />       
       <div className="w-full bg-white flex justify-center overflow-x-hidden">
         <div className="w-full max-w-[1440px] flex">
           {/* 왼쪽 STEP 사이드바 */}
