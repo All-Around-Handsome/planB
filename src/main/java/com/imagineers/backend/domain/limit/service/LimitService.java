@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import com.imagineers.backend.domain.limit.dto.LimitCheckResponse;
+import com.imagineers.backend.domain.limit.dto.LimitStatusResponse;
 
 /**
  * 일일 사용 횟수 제한 로직 (L-001 횟수 추적, L-002 초과 차단).
@@ -104,6 +105,37 @@ public class LimitService {
         dailyLimit.incrementAnalysisCount();
         int remaining = dailyAnalysisLimit - (used + 1);
         return new LimitCheckResponse(true, remaining, dailyAnalysisLimit);
+    }
+
+    /**
+     * 오늘 남은 횟수 조회 (차감 없음!)
+     * 프론트가 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용으로 호출한다.
+     * 카운트를 건드리지 않고 현재 상태만 읽어서 반환한다.
+     * @param userId 요청한 사용자
+     * @return 생성/분석 각각의 남은 횟수와 한도
+     */
+    @Transactional(readOnly = true)  // 읽기 전용 (아무것도 안 바꿈)
+    public LimitStatusResponse getLimitStatus(Long userId) {
+        LocalDate today = LocalDate.now();
+
+        // 오늘 기록을 조회. 없으면(오늘 첫 방문) 아직 아무것도 안 썼으므로 사용량 0으로 계산.
+        // ★ 여기서는 새로 만들지 않는다 — 단순 조회라 DB에 기록을 남길 필요가 없다.
+        DailyLimit dailyLimit = dailyLimitRepository
+                .findByUserIdAndLimitDate(userId, today)
+                .orElse(null);
+
+        // 오늘 기록이 없으면 사용량 0, 있으면 실제 사용량
+        int usedGeneration = (dailyLimit != null) ? dailyLimit.getGenerationCount() : 0;
+        int usedAnalysis = (dailyLimit != null) ? dailyLimit.getAnalysisCount() : 0;
+
+        // 남은 횟수 = 한도 - 사용량
+        int remainingGeneration = dailyGenerationLimit - usedGeneration;
+        int remainingAnalysis = dailyAnalysisLimit - usedAnalysis;
+
+        return new LimitStatusResponse(
+                remainingGeneration, dailyGenerationLimit,
+                remainingAnalysis, dailyAnalysisLimit
+        );
     }
 
     /**

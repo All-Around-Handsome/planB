@@ -17,10 +17,11 @@ import com.imagineers.backend.domain.bmc.dto.BmcItemUpdateRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
 import com.imagineers.backend.domain.bmc.dto.BmcListResponse;
 import com.imagineers.backend.domain.bmc.dto.BmcDetailResponse;
-import org.springframework.web.bind.annotation.GetMapping;
 import java.util.List;
 import com.imagineers.backend.domain.limit.dto.LimitCheckResponse;
 import com.imagineers.backend.domain.limit.service.LimitService;
+import com.imagineers.backend.domain.limit.dto.LimitStatusResponse;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * BMC 관련 API 입구.
@@ -139,5 +140,18 @@ public class BmcController {
     ) {
         LimitCheckResponse result = limitService.tryConsumeAnalysis(userId);
         return ApiResponse.success(result);
+    }
+
+    /**
+     * 오늘 남은 횟수 조회 (차감 없음)
+     * 프론트가 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용으로 호출.
+     * 주소: GET /api/bmc/limit
+     */
+    @GetMapping("/limit")
+    public ApiResponse<LimitStatusResponse> getLimitStatus(
+            @AuthenticationPrincipal Long userId
+    ) {
+        LimitStatusResponse status = limitService.getLimitStatus(userId);
+        return ApiResponse.success(status);
     }
 }
