@@ -151,8 +151,10 @@ Authorization: Bearer {accessToken}
 ## 2. BMC 저장
 
 > ⚠️ **횟수 차감 안내**: BMC 저장 API는 **일일 횟수를 차감하지 않습니다.**
-> 횟수 차감은 저장 전에 호출하는 **횟수 체크 API(4번 항목)** 에서 이루어집니다.
-> 권장 흐름: `횟수 체크 → (통과 시) AI 호출 → 저장`
+> 횟수 차감은 저장 전에 호출하는 **횟수 차감 API(4번 항목)** 에서 이루어집니다.
+> 전체 흐름: `남은 횟수 조회 → 버튼 클릭 시 차감 → AI 호출 → 저장`
+>
+> **참고**: BMC 생성/분석의 AI 작업(9칸 채우기, 점수·리스크·액션 산출)은 프론트↔AI에서 이루어지고, 백엔드 저장 API는 **완성된 결과를 받아 저장만** 합니다.
 
 ### 2-1. BMC 생성 결과 저장 (AI 자동생성)
 
@@ -322,12 +324,52 @@ BMC 항목(item) 하나의 내용/메모를 수정합니다. **본인 소유의 
 
 ---
 
-## 4. 횟수 체크 (BMC 생성/분석 전)
+## 4. 사용 횟수 (조회 / 차감)
 
-> BMC를 만들기 **전에** 호출하여, 오늘 사용 가능한지 확인하고 횟수를 차감합니다.
-> **권장 흐름**: `횟수 체크 API 호출` → `canProceed: true면 AI 호출 진행` → `AI 결과를 저장 API로 저장`
+> 하루 사용 횟수는 **생성**과 **분석**을 별개로 관리합니다. (예: 생성 5회, 분석 5회)
+> - **남은 횟수만 보고 싶을 때** → 4-1 조회 API (차감 없음)
+> - **실제로 생성/분석을 시작할 때** → 4-2 / 4-3 차감 API (호출 시 1 차감)
+>
+> **권장 프론트 흐름**
+> ```
+> ① 페이지 진입 → GET /api/bmc/limit (남은 횟수 표시, 차감 X)
+> ② 생성/분석 버튼 클릭 → POST check-generation 또는 check-analysis (여기서 차감)
+> ③ canProceed: true면 AI 호출 진행
+> ④ AI 결과를 저장 API로 저장 (차감 X)
+> ```
 
-### 4-1. AI 생성 가능 여부 확인
+### 4-1. 남은 횟수 조회 (차감 없음)
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `GET` |
+| 주소 | `/api/bmc/limit` |
+| 인증 | **필요** |
+
+오늘 남은 생성/분석 횟수를 반환합니다. **횟수를 차감하지 않습니다.** 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용.
+
+**요청 Body**: 없음
+
+**응답 (성공)**
+```json
+{
+  "success": true,
+  "data": {
+    "remainingGeneration": 3,
+    "generationLimit": 5,
+    "remainingAnalysis": 4,
+    "analysisLimit": 5
+  },
+  "error": null
+}
+```
+
+> `remainingGeneration`/`remainingAnalysis`: 각각 오늘 남은 횟수
+> `generationLimit`/`analysisLimit`: 각각 하루 한도
+
+---
+
+### 4-2. AI 생성 횟수 차감
 
 | 항목 | 내용 |
 |------|------|
@@ -335,7 +377,7 @@ BMC 항목(item) 하나의 내용/메모를 수정합니다. **본인 소유의 
 | 주소 | `/api/bmc/check-generation` |
 | 인증 | **필요** |
 
-AI 생성을 시작하기 전에 호출합니다. 호출 시 오늘 생성 횟수가 1 차감됩니다.
+AI 생성을 시작하기 **직전**(생성 버튼 클릭 시)에 호출합니다. 호출 시 오늘 생성 횟수가 1 차감됩니다.
 
 **요청 Body**: 없음
 
@@ -358,13 +400,13 @@ AI 생성을 시작하기 전에 호출합니다. 호출 시 오늘 생성 횟�
 ```
 
 > 한도를 초과해도 **HTTP 200**으로 응답합니다. `canProceed` 값으로 판단하세요.
-> - `canProceed: true` → AI 호출 진행
-> - `canProceed: false` → 사용자에게 한도 초과 안내
-> - `remaining`: 오늘 남은 횟수 / `limit`: 하루 한도
+> - `canProceed: true` → 차감 완료, AI 호출 진행
+> - `canProceed: false` → 차감되지 않음, 사용자에게 한도 초과 안내
+> - `remaining`: 차감 후 남은 횟수 / `limit`: 하루 한도
 
 ---
 
-### 4-2. 직접 분석 가능 여부 확인
+### 4-3. 직접 분석 횟수 차감
 
 | 항목 | 내용 |
 |------|------|
@@ -372,11 +414,11 @@ AI 생성을 시작하기 전에 호출합니다. 호출 시 오늘 생성 횟�
 | 주소 | `/api/bmc/check-analysis` |
 | 인증 | **필요** |
 
-직접 분석을 시작하기 전에 호출합니다. 생성과 **별개로** 분석 횟수가 차감됩니다.
+직접 분석을 시작하기 직전(분석 버튼 클릭 시)에 호출합니다. 생성과 **별개로** 분석 횟수가 1 차감됩니다.
 
 **요청 Body**: 없음
 
-**응답**: 4-1과 동일한 형식 (`canProceed`, `remaining`, `limit`)
+**응답**: 4-2와 동일한 형식 (`canProceed`, `remaining`, `limit`)
 
 ---
 
@@ -490,8 +532,8 @@ BMC 하나의 **전체 내용**을 반환합니다. 아이디어 + 9개 항목 +
 ### bmcType (BMC 종류)
 | 값 | 의미 |
 |----|------|
-| `AI_GENERATED` | AI 자동생성 |
-| `DIRECT_ANALYSIS` | 직접 분석 |
+| `AI_GENERATED` | AI 자동생성 (9칸만) |
+| `DIRECT_ANALYSIS` | 직접 분석 (9칸 + 점수·리스크·액션) |
 
 ### itemType (BMC 9개 항목)
 | 값 | 의미 |
@@ -524,8 +566,9 @@ BMC 하나의 **전체 내용**을 반환합니다. 아이디어 + 9개 항목 +
 | 카카오 로그인 | POST | `/api/auth/kakao` | - |
 | 구글 로그인 | POST | `/api/auth/google` | - |
 | 로그아웃 | POST | `/api/auth/logout` | ✅ |
-| 생성 횟수 체크 | POST | `/api/bmc/check-generation` | ✅ |
-| 분석 횟수 체크 | POST | `/api/bmc/check-analysis` | ✅ |
+| 남은 횟수 조회 (차감 X) | GET | `/api/bmc/limit` | ✅ |
+| 생성 횟수 차감 | POST | `/api/bmc/check-generation` | ✅ |
+| 분석 횟수 차감 | POST | `/api/bmc/check-analysis` | ✅ |
 | BMC 생성 저장 | POST | `/api/bmc` | ✅ |
 | BMC 분석 저장 | POST | `/api/bmc/analysis` | ✅ |
 | BMC 목록 조회 | GET | `/api/bmc` | ✅ |
@@ -539,5 +582,5 @@ BMC 하나의 **전체 내용**을 반환합니다. 아이디어 + 9개 항목 +
 
 1. **CORS**: 백엔드는 `http://localhost:5173`의 요청을 허용하도록 설정되어 있습니다. 프론트 주소가 바뀌면 백엔드에 알려주세요.
 2. **로그인 흐름**: 프론트가 카카오/구글 인가 코드를 받아 백엔드로 전달 → 백엔드가 JWT 반환 → 프론트가 accessToken 저장 → 이후 API 호출 시 `Authorization: Bearer {accessToken}` 헤더 사용. (자세한 내용은 `LOGIN_GUIDE.md` 참고)
-3. **BMC 생성/분석 흐름**: 횟수 체크(4번) → `canProceed: true`면 AI 호출 → 저장(2번). 횟수는 체크 단계에서 차감됩니다.
+3. **BMC 생성/분석 흐름**: 남은 횟수 조회(`GET /api/bmc/limit`) → 버튼 클릭 시 차감(`check-generation` 또는 `check-analysis`) → `canProceed: true`면 AI 호출 → 저장(`/api/bmc` 또는 `/api/bmc/analysis`). 횟수는 차감 API에서만 줄어듭니다.
 4. **토큰 만료**: accessToken은 1시간 후 만료됩니다. 만료 시 재로그인이 필요합니다.
