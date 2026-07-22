@@ -4,8 +4,9 @@ import {
   Search,
   FileText,
   BarChart3,
-  User,
+  FileOutput,
 } from "lucide-react";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 function ProjectNav() {
@@ -39,9 +40,9 @@ function ProjectNav() {
       path: "/bmc/analyze",
     },
     {
-      icon: <User size={24} />,
-      label: "마이페이지",
-      path: "/my",
+      icon: <FileOutput size={24} />,
+      label: "BMC 출력",
+      path: "/bmc/result",
     },
   ];
 
