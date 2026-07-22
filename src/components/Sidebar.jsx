@@ -12,9 +12,11 @@ function Sidebar({ activeStep = "idea" }) {
       title: "아이디어 입력",
       desc: (
         <>
-          비즈니스 아이디어를 입력하면
+          비즈니스 아이디어를 입력하고
           <br />
-          AI가 기반 정보를 파악하여 분석을 시작합니다.
+          분석 진행 단계를 설정하여
+          <br />
+          BMC 생성을 준비합니다.
         </>
       ),
     },
@@ -22,9 +24,11 @@ function Sidebar({ activeStep = "idea" }) {
       title: "경쟁 서비스 탐색",
       desc: (
         <>
-          입력한 아이디어를 기준으로
+          입력한 아이디어를 기반으로
           <br />
-          유사한 서비스를 분석합니다.
+          경쟁 서비스와 시장 정보를
+          <br />
+          탐색하여 방향을 확인합니다.
         </>
       ),
     },
@@ -32,9 +36,11 @@ function Sidebar({ activeStep = "idea" }) {
       title: "AI 기반 BMC 생성",
       desc: (
         <>
-          입력한 정보를 바탕으로
+          입력한 아이디어 정보를 분석하여
           <br />
-          BMC를 자동 생성합니다.
+          AI가 비즈니스 모델 캔버스의
+          <br />
+          9가지 요소를 자동 생성합니다.
         </>
       ),
     },
@@ -42,9 +48,11 @@ function Sidebar({ activeStep = "idea" }) {
       title: "BMC 분석",
       desc: (
         <>
-          생성된 BMC의 요소를 분석하고
+          작성한 BMC를 기반으로
           <br />
-          개선 인사이트를 제공합니다.
+          AI가 사업 모델을 분석하고
+          <br />
+          개선 방향을 제공합니다.
         </>
       ),
     },
@@ -52,9 +60,11 @@ function Sidebar({ activeStep = "idea" }) {
       title: "결과 출력",
       desc: (
         <>
-          분석 결과를 보고서로 정리하여
+          생성된 BMC와 분석 결과를
           <br />
-          다운로드할 수 있습니다.
+          하나의 보고서 형태로 정리하여
+          <br />
+          확인하고 출력할 수 있습니다.
         </>
       ),
     },
@@ -65,31 +75,61 @@ function Sidebar({ activeStep = "idea" }) {
       id: "idea",
       icon: <Edit3 size={34} />,
       title: "아이디어 입력",
-      desc: "AI가 도와주는 비즈니스 모델 캔버스 플랫폼",
+      desc: (
+        <>
+          아이디어를 입력하고
+          <br />
+          진행단계를 설정합니다.
+        </>
+      ),
     },
     {
       id: "explore",
       icon: <Target size={34} />,
       title: "경쟁 서비스 탐색",
-      desc: "입력한 아이디어와 유사한 서비스와 시장을 분석합니다.",
+      desc: (
+        <>
+          유사한 경쟁 서비스와
+          <br />
+          시장 정보를 탐색합니다.
+        </>
+      ),
     },
     {
       id: "create",
       icon: <FileText size={34} />,
       title: "AI 기반 BMC 생성",
-      desc: "입력한 정보를 바탕으로 AI가 BMC를 자동으로 생성합니다.",
+      desc: (
+        <>
+          아이디어를 기반으로
+          <br />
+          AI가 BMC를 생성합니다.
+        </>
+      ),
     },
     {
       id: "analyze",
       icon: <BarChart3 size={34} />,
       title: "BMC 분석",
-      desc: "생성된 BMC의 각 요소를 분석하고 개선 인사이트를 제공합니다.",
+      desc: (
+        <>
+          직접 작성한 BMC를
+          <br />
+          AI가 분석하고 개선합니다.
+        </>
+      ),
     },
     {
       id: "result",
       icon: <LogOut size={34} />,
       title: "결과 출력",
-      desc: "분석 결과를 보고서로 정리하여 다운로드할 수 있습니다.",
+      desc: (
+        <>
+          BMC와 분석 결과를
+          <br />
+          보고서로 출력합니다.
+        </>
+      ),
     },
   ];
 
@@ -105,7 +145,7 @@ function Sidebar({ activeStep = "idea" }) {
         {currentPage.desc}
       </p>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 w-full">
         {items.map((item) => {
           const active = activeStep === item.id;
 
@@ -113,6 +153,7 @@ function Sidebar({ activeStep = "idea" }) {
             <div
               key={item.id}
               className={`
+                w-full
                 flex items-center gap-5 rounded-2xl p-4 transition
                 ${
                   active
@@ -123,13 +164,10 @@ function Sidebar({ activeStep = "idea" }) {
             >
               <div
                 className={`
-                  w-[72px] h-[72px]
-                  rounded-2xl
-                  bg-white
-                  shadow-sm
                   flex
                   items-center
                   justify-center
+                  shrink-0
                   ${active ? "text-blue-500" : "text-blue-400"}
                 `}
               >
