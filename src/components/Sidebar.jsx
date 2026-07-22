@@ -1,7 +1,7 @@
 import {
   Edit3,
   FileText,
-  Target,
+  Search,
   BarChart3,
   LogOut,
 } from "lucide-react";
@@ -85,7 +85,7 @@ function Sidebar({ activeStep = "idea" }) {
     },
     {
       id: "explore",
-      icon: <Target size={34} />,
+      icon: <Search size={34} />,
       title: "경쟁 서비스 탐색",
       desc: (
         <>

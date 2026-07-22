@@ -1,4 +1,4 @@
-import { Sparkles, Lightbulb } from "lucide-react";
+import { Sparkles, LayoutTemplate } from "lucide-react";
 
 function BMCSelectModal({
   open,
@@ -83,7 +83,7 @@ function BMCSelectModal({
               active:scale-[0.98]
             "
           >
-            <Lightbulb
+            <LayoutTemplate
               className="text-blue-600 mb-4"
               size={28}
             />

@@ -1,10 +1,9 @@
 import {
-  Home,
-  Lightbulb,
+  Edit3,
   Search,
   FileText,
   BarChart3,
-  FileOutput,
+  LogOut,
 } from "lucide-react";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -15,12 +14,7 @@ function ProjectNav() {
 
   const menus = [
     {
-      icon: <Home size={24} />,
-      label: "홈",
-      path: "/",
-    },
-    {
-      icon: <Lightbulb size={24} />,
+      icon: <Edit3 size={24} />,
       label: "아이디어 입력",
       path: "/idea",
     },
@@ -40,7 +34,7 @@ function ProjectNav() {
       path: "/bmc/analyze",
     },
     {
-      icon: <FileOutput size={24} />,
+      icon: <LogOut size={24} />,
       label: "BMC 출력",
       path: "/bmc/result",
     },
