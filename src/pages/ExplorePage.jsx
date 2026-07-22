@@ -17,6 +17,7 @@ import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import ExploreLoading from "../components/ExploreLoading";
 import CompetitorListPanel from "../components/CompetitorListPanel";
+import BMCSelectModal from "../components/BMCSelectModal";
 
 import { getProjectData } from "../utils/projectStorage";
 
@@ -32,6 +33,8 @@ function ExplorePage() {
     searchOption: "withSearch",
     exploreResult: null,
   });
+
+  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
 
   useEffect(() => {
     const savedProject = getProjectData();
@@ -104,10 +107,6 @@ function ExplorePage() {
 
   const handlePrev = () => {
     navigate("/idea");
-  };
-
-  const handleNext = () => {
-    navigate("/bmc/create");
   };
 
   return (
@@ -415,7 +414,7 @@ function ExplorePage() {
                 <ShieldCheck size={22} className="shrink-0" />
 
                 <span className="text-[#3D4770] font-medium flex items-center h-full">
-                  BMC 생성 후 탐색 결과가 저장됩니다.
+                  BMC 생성 완료 후 프로젝트 데이터가 저장됩니다.
                 </span>
               </div>
 
@@ -440,11 +439,11 @@ function ExplorePage() {
                   "
                 >
                   <RotateCcw size={18} />
-                  아이디어로 돌아가기
+                  아이디어 수정
                 </button>
 
                 <button
-                  onClick={handleNext}
+                  onClick={() => setIsBMCSelectOpen(true)}
                   className="
                     h-11
                     px-7
@@ -460,7 +459,7 @@ function ExplorePage() {
                     transition
                   "
                 >
-                  BMC 생성으로 이동
+                  BMC 생성
                   <ArrowRight size={18} />
                 </button>
               </div>
@@ -470,6 +469,12 @@ function ExplorePage() {
               open={isListOpen}
               onClose={() => setIsListOpen(false)}
               services={competitors}
+            />
+            <BMCSelectModal
+              open={isBMCSelectOpen}
+              onClose={() => setIsBMCSelectOpen(false)}
+              onAI={() => navigate("/bmc/create")}
+              onWrite={() => navigate("/bmc/analyze")}
             />
           </main>
         </div>

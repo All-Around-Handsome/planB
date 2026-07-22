@@ -161,11 +161,12 @@ function BMCAnalyzePage() {
   };
 
   const handlePrev = () => {
-    navigate("/bmc/create");
+    setIsAnalyzing(false);
+    setHasAnalyzeResult(false);
   };
 
   const handleNext = () => {
-    navigate("/bmc/result");
+    navigate("/bmc/analyze/result");
   };
 
   const [ideaTitle, setIdeaTitle] = useState("");
@@ -630,7 +631,7 @@ function BMCAnalyzePage() {
                   "
                 >
                   <RotateCcw size={18} />
-                  BMC 생성으로 돌아가기
+                  분석 결과 초기화
                 </button>
 
                 <button
@@ -653,7 +654,7 @@ function BMCAnalyzePage() {
                     }
                   `}
                 >
-                  결과 확인으로 이동
+                  결과 확인
                   <ArrowRight size={18} />
                 </button>
               </div>

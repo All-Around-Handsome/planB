@@ -10,7 +10,7 @@ import ExplorePage from "../pages/ExplorePage";
 import BMCCreatePage from "../pages/BMCCreatePage";
 import BMCAnalyzePage from "../pages/BMCAnalyzePage";
 import BMCResultPage from "../pages/BMCResultPage";
-import BMCEditPage from "../pages/BMCEditPage";
+import BMCAnalyzeResultPage from "../pages/BMCAnalyzeResultPage";
 import MyPage from "../pages/MyPage";
 
 import KakaoCallback from "../pages/oauth/KakaoCallback";
@@ -85,10 +85,10 @@ function AppRouter() {
         />
 
         <Route
-          path="/bmc/edit"
+          path="/bmc/analyze/result"
           element={
             <MemberRoute>
-              <BMCEditPage />
+              <BMCAnalyzeResultPage />
             </MemberRoute>
           }
         />

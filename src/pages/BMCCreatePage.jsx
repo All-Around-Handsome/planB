@@ -40,15 +40,11 @@ function BMCCreatePage() {
   };
 
   const handlePrev = () => {
-    if (project.searchOption === "withSearch") {
-      navigate("/explore");
-    } else {
-      navigate("/idea");
-    }
+    navigate("/idea");
   };
 
   const handleNext = () => {
-    navigate("/bmc/analyze");
+    navigate("/bmc/result");
   };
 
   return (
@@ -296,7 +292,7 @@ function BMCCreatePage() {
                   "
                 >
                   <RotateCcw size={18} />
-                  이전 단계로 돌아가기
+                  아이디어 수정
                 </button>
 
                 <button
@@ -318,7 +314,7 @@ function BMCCreatePage() {
                     }
                   `}
                 >
-                  BMC 분석으로 이동
+                  결과 확인
                   <ArrowRight size={18} />
                 </button>
               </div>

@@ -15,6 +15,7 @@ import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import Textarea from "../components/Textarea";
 import DraftRestoreModal from "../components/DraftRestoreModal";
+import BMCSelectModal from "../components/BMCSelectModal";
 
 import {
   saveProjectData,
@@ -30,6 +31,7 @@ function IdeaPage() {
   const [searchOption, setSearchOption] = useState("withSearch");
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftData, setDraftData] = useState(null);
+  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -151,7 +153,11 @@ function IdeaPage() {
 
     removeDraftData();
 
-    navigate("/explore");
+    if (searchOption === "withSearch") {
+      navigate("/explore");
+    } else {
+      setIsBMCSelectOpen(true);
+    }
   };
 
   return (
@@ -338,10 +344,16 @@ function IdeaPage() {
                 "
               >
                 <Sparkles size={20} />
-                분석 시작하기
+                BMC 작성 시작
               </button>
 
             </footer>
+            <BMCSelectModal
+              open={isBMCSelectOpen}
+              onClose={() => setIsBMCSelectOpen(false)}
+              onAI={() => navigate("/bmc/create")}
+              onWrite={() => navigate("/bmc/analyze")}
+            />
           </main>
         </div>
       </div>
