@@ -209,6 +209,12 @@ function BMCResultPage() {
     navigate("/my");
   };
 
+  {/* DEV: 결과 페이지 전환 테스트용 - 삭제 예정 */}
+  const handleResultToggle = () => {
+    navigate("/bmc/analyze/result");
+  };
+  {/* DEV: 결과 페이지 전환 테스트용 - 삭제 예정 */}
+
   return (
     <MainLayout>
       <div className="w-full bg-white flex justify-center overflow-x-hidden">
@@ -271,6 +277,25 @@ function BMCResultPage() {
                   PDF 다운로드
                 </button>
               </div>
+
+              {/* DEV: 결과 페이지 전환 테스트용 - 삭제 예정 */}
+              <button
+                onClick={handleResultToggle}
+                className="
+                  h-10
+                  px-5
+                  rounded-xl
+                  border
+                  border-gray-300
+                  text-gray-600
+                  text-sm
+                  font-bold
+                  hover:bg-gray-50
+                "
+              >
+                분석 결과 페이지
+              </button>
+              {/* DEV: 결과 페이지 전환 테스트용 - 삭제 예정 */}
             </header>
 
             {/* 콘텐츠 */}
