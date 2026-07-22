@@ -51,6 +51,27 @@ function BMCAnalyzePage() {
     analysisResult: null,
   };
 
+  const [activeSection, setActiveSection] = useState(null);
+
+  const getCardClass = (section) =>
+    `
+      rounded-2xl
+      bg-white
+      p-5
+      shadow-sm
+      transition-all
+      duration-200
+      border
+      ${
+        activeSection === section
+          ? "border-blue-500 ring-2 ring-blue-100 shadow-md"
+          : "border-gray-200"
+      }
+    `;
+
+  const handleFocus = (section) => setActiveSection(section);
+  const handleBlur = () => setActiveSection(null);
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasAnalyzeResult, setHasAnalyzeResult] = useState(
     project.analysisResult !== null
@@ -176,7 +197,8 @@ function BMCAnalyzePage() {
             {/* 콘텐츠 */}
             <div className="flex-1 px-12 pt-8 pb-8">
               <div className="max-w-[1120px] h-full flex flex-col">
-                {/* 1. 생성된 BMC 요약 */}
+                {/* 1. 생성된 BMC 요약 (기존 BMC UI)*/}
+                {/*
                 <section className="mb-8">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-gray-900">
@@ -211,6 +233,155 @@ function BMCAnalyzePage() {
                         </p>
                       </div>
                     ))}
+                  </div>
+                </section>
+                */}
+
+                {/* 1. BMC 직접 작성 */}
+                <section className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-900">
+                      1. BMC 직접 작성
+                    </h2>
+
+                    <span className="text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">
+                      분석 대상
+                    </span>
+                  </div>
+
+                  {/* BMC Canvas UI */}
+                  <div className="rounded-3xl border border-gray-200 bg-[#F8FAFF] p-6 shadow-sm">
+                    {/* 상단 5열 영역 */}
+                    <div className="grid grid-cols-5 gap-4 h-[430px]">
+                      {/* Key Partners */}
+                      <div className={getCardClass("keyPartners")}>
+                        <h3 className="text-base font-bold text-gray-900 mb-4">
+                          핵심 파트너
+                        </h3>
+
+                        <textarea
+                          placeholder="핵심 파트너를 입력하세요"
+                          onFocus={() => handleFocus("keyPartners")}
+                          onBlur={handleBlur}
+                          className="w-full h-[320px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                        />
+                      </div>
+
+                      {/* Key Activities + Key Resources */}
+                      <div className="grid grid-rows-2 gap-4">
+                        <div className={getCardClass("keyActivities")}>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">
+                            핵심 활동
+                          </h3>
+
+                          <textarea
+                            placeholder="핵심 활동을 입력하세요"
+                            onFocus={() => handleFocus("keyActivities")}
+                            onBlur={handleBlur}
+                            className="w-full h-[120px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                          />
+                        </div>
+
+                        <div className={getCardClass("keyResources")}>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">
+                            핵심 자원
+                          </h3>
+
+                          <textarea
+                            placeholder="핵심 자원을 입력하세요"
+                            onFocus={() => handleFocus("keyResources")}
+                            onBlur={handleBlur}
+                            className="w-full h-[120px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Value Proposition */}
+                      <div className={getCardClass("valueProposition")}>
+                        <h3 className="text-base font-bold text-gray-900 mb-4">
+                          가치 제안
+                        </h3>
+
+                        <textarea
+                          placeholder="고객에게 제공할 핵심 가치를 입력하세요"
+                          onFocus={() => handleFocus("valueProposition")}
+                          onBlur={handleBlur}
+                          className="w-full h-[320px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                        />
+                      </div>
+
+                      {/* Customer Relationships + Channels */}
+                      <div className="grid grid-rows-2 gap-4">
+                        <div className={getCardClass("customerRelationships")}>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">
+                            고객 관계
+                          </h3>
+
+                          <textarea
+                            placeholder="고객 관계 전략을 입력하세요"
+                            onFocus={() => handleFocus("customerRelationships")}
+                            onBlur={handleBlur}
+                            className="w-full h-[120px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                          />
+                        </div>
+
+                        <div className={getCardClass("channels")}>
+                          <h3 className="text-base font-bold text-gray-900 mb-4">
+                            채널
+                          </h3>
+
+                          <textarea
+                            placeholder="채널을 입력하세요"
+                            onFocus={() => handleFocus("channels")}
+                            onBlur={handleBlur}
+                            className="w-full h-[120px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Customer Segments */}
+                      <div className={getCardClass("customerSegments")}>
+                        <h3 className="text-base font-bold text-gray-900 mb-4">
+                          고객 세그먼트
+                        </h3>
+
+                        <textarea
+                          placeholder="고객 세그먼트를 입력하세요"
+                          onFocus={() => handleFocus("customerSegments")}
+                          onBlur={handleBlur}
+                          className="w-full h-[320px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cost Structure / Revenue Streams */}
+                    <div className="grid grid-cols-2 gap-4 mt-4 h-[150px]">
+                      <div className={getCardClass("costStructure")}>
+                        <h3 className="text-base font-bold text-gray-900 mb-4">
+                          비용 구조
+                        </h3>
+
+                        <textarea
+                          placeholder="비용 구조를 입력하세요"
+                          onFocus={() => handleFocus("costStructure")}
+                          onBlur={handleBlur} 
+                          className="w-full h-[70px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                        />
+                      </div>
+
+                      <div className={getCardClass("revenueStreams")}>
+                        <h3 className="text-base font-bold text-gray-900 mb-4">
+                          수익 구조
+                        </h3>
+
+                        <textarea
+                          placeholder="수익 구조를 입력하세요"
+                          onFocus={() => handleFocus("revenueStreams")}
+                          onBlur={handleBlur}
+                          className="w-full h-[70px] resize-none outline-none text-sm text-[#3D4770] leading-6"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </section>
 
