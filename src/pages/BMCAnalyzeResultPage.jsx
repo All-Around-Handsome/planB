@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import {
   ArrowRight,
@@ -18,6 +18,7 @@ import MainLayout from "../layouts/MainLayout.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import ProjectNav from "../components/ProjectNav.jsx";
 
+import { getProjectData } from "../utils/projectStorage";
 import "../assets/font/PretendardMedium.js";
 
 function BMCAnalyzeResultPage() {
@@ -25,18 +26,27 @@ function BMCAnalyzeResultPage() {
 
   const [toastMessage, setToastMessage] = useState("");
 
-  /**
-   * 지금은 프론트 디자인용 임시 결과 데이터
-   * 나중에는 백엔드에서 현재 projectId 기준으로 받아오면 됨
-   */
-  const project = {
-    ideaTitle: "아이디어 페이지에서 입력한 제목이 표시됩니다",
-    ideaContent:
-      "아이디어 페이지에서 입력한 아이디어 내용이 이 영역에 표시됩니다.",
+  const [project, setProject] = useState({
+    ideaTitle: "",
+    ideaContent: "",
     totalScore: 82,
     summary:
       "현재 비즈니스 모델은 고객 문제와 가치 제안이 비교적 명확하며, 초기 시장 진입 가능성이 있습니다. 다만 수익 구조와 고객 관계 전략을 조금 더 구체화할 필요가 있습니다.",
-  };
+  });
+
+  useEffect(() => {
+    const savedProject = getProjectData();
+
+    console.log("BMCAnalyzeResult savedProject:", savedProject);
+
+    if (savedProject) {
+      setProject((prev) => ({
+        ...prev,
+        ideaTitle: savedProject.ideaTitle ?? "",
+        ideaContent: savedProject.ideaContent ?? "",
+      }));
+    }
+  }, []);
 
   const createdAt = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -309,8 +319,8 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
     navigate("/bmc/analyze");
   };
 
-  const handleEdit = () => {
-    navigate("/bmc/edit");
+  const handleMyPage = () => {
+    navigate("/my");
   };
 
   return (
@@ -390,7 +400,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
                         </p>
 
                         <h2 className="text-2xl font-bold text-gray-900">
-                          {project.ideaTitle}
+                          {project.ideaTitle || "아이디어 제목 입력"}
                         </h2>
                       </div>
 
@@ -739,7 +749,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
                 </button>
 
                 <button
-                  onClick={handleEdit}
+                  onClick={handleMyPage}
                   className="
                     h-11
                     px-7
@@ -755,7 +765,7 @@ ${actionItems.map((item, index) => `${index + 1}. ${item}`).join("\n")}
                     transition
                   "
                 >
-                  BMC 수정하기
+                  마이페이지 이동
                   <ArrowRight size={18} />
                 </button>
               </div>

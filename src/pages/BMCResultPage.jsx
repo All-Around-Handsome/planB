@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 
+import { getProjectData } from "../utils/projectStorage";
 import "../assets/font/PretendardMedium.js";
 
 function BMCResultPage() {
@@ -19,15 +20,21 @@ function BMCResultPage() {
 
   const [toastMessage, setToastMessage] = useState("");
 
-  /**
-   * 지금은 프론트 디자인용 임시 결과 데이터
-   * 나중에는 백엔드에서 현재 projectId 기준으로 받아오면 됨
-   */
-  const project = {
-    ideaTitle: "아이디어 페이지에서 입력한 제목이 표시됩니다",
-    ideaContent:
-      "아이디어 페이지에서 입력한 아이디어 내용이 이 영역에 표시됩니다.",
-  };
+  const [project, setProject] = useState({
+    ideaTitle: "",
+    ideaContent: "",
+  });
+  
+  useEffect(() => {
+    const savedProject = getProjectData();
+
+    if (savedProject) {
+      setProject({
+        ideaTitle: savedProject.ideaTitle || "",
+        ideaContent: savedProject.ideaContent || "",
+      });
+    }
+  }, []);
 
   const createdAt = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -195,7 +202,7 @@ function BMCResultPage() {
   };
 
   const handlePrev = () => {
-    navigate("/bmc/idea");
+    navigate("/idea");
   };
 
   const handleMyPage = () => {
