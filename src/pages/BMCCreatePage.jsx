@@ -7,6 +7,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import { getBmcLimit } from "../api/bmc";
+
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
@@ -24,6 +26,7 @@ function BMCCreatePage() {
     searchOption: "withoutSearch",
   });
 
+  const [bmcLimit, setBmcLimit] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
 
@@ -33,6 +36,20 @@ function BMCCreatePage() {
     if (savedProject) {
       setProject(savedProject);
     }
+
+    async function fetchBmcLimit() {
+      try {
+        const response = await getBmcLimit();
+
+        if (response.success) {
+          setBmcLimit(response.data);
+        }
+      } catch (error) {
+        console.error("사용 횟수 조회 실패", error);
+      }
+    }
+
+    fetchBmcLimit();
   }, []);
 
   const handleGenerate = () => {
@@ -85,12 +102,23 @@ function BMCCreatePage() {
                       2. AI 기반 BMC 생성
                     </h2>
 
-                    {isGenerated && (
-                      <div className="flex items-center gap-2 text-sm font-bold text-blue-600">
-                        <CheckCircle2 size={18} />
-                        BMC 생성 완료
-                      </div>
-                    )}
+                    <div className="flex items-center gap-4">
+                      {bmcLimit && (
+                        <div className="text-sm font-semibold text-gray-500">
+                          오늘 생성 가능 횟수{" "}
+                          <span className="text-blue-600">
+                            {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}
+                          </span>
+                        </div>
+                      )}
+
+                      {isGenerated && (
+                        <div className="flex items-center gap-2 text-sm font-bold text-blue-600">
+                          <CheckCircle2 size={18} />
+                          BMC 생성 완료
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {!isGenerated ? (
