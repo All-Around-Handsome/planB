@@ -12,6 +12,8 @@ import {
   Lightbulb,
 } from "lucide-react";
 
+import { getBmcLimit } from "../api/bmc";
+
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
@@ -35,18 +37,28 @@ function ExplorePage() {
   });
 
   const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
+  const [bmcLimit, setBmcLimit] = useState(null);
 
   useEffect(() => {
     const savedProject = getProjectData();
 
-    console.log("savedProject", savedProject);
-
     if (savedProject) {
-      setProject({
-        ...savedProject,
-        exploreResult: null,
-      });
+      setProject(savedProject);
     }
+
+    async function fetchBmcLimit() {
+      try {
+        const response = await getBmcLimit();
+
+        if (response.success) {
+          setBmcLimit(response.data);
+        }
+      } catch (error) {
+        console.error("사용 횟수 조회 실패", error);
+      }
+    }
+
+    fetchBmcLimit();
   }, []);
 
   const [isSearching, setIsSearching] = useState(false);
@@ -142,9 +154,20 @@ function ExplorePage() {
 
                 {!hasExploreResult ? (
                   <section className="flex-1 flex flex-col">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">
-                      2. 경쟁 서비스 탐색
-                    </h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold text-gray-900">
+                        경쟁 서비스 탐색
+                      </h2>
+
+                      {bmcLimit && (
+                        <div className="text-sm font-semibold text-gray-500">
+                          오늘 탐색 가능 횟수{" "}
+                          <span className="text-blue-600">
+                            {bmcLimit.remainingExplore}/{bmcLimit.exploreLimit}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
                     <div
                       className="

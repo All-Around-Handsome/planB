@@ -12,6 +12,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { getBmcLimit } from "../api/bmc";
+import { checkAnalysis } from "../api/bmc";
+
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
@@ -76,6 +79,8 @@ function BMCAnalyzePage() {
   const [hasAnalyzeResult, setHasAnalyzeResult] = useState(
     project.analysisResult !== null
   );
+
+  const [bmcLimit, setBmcLimit] = useState(null);
 
   const bmcItems = [
     {
@@ -177,6 +182,20 @@ function BMCAnalyzePage() {
     if (savedProject) {
       setIdeaTitle(savedProject.ideaTitle);
     }
+
+    async function fetchBmcLimit() {
+      try {
+        const response = await getBmcLimit();
+
+        if (response.success) {
+          setBmcLimit(response.data);
+        }
+      } catch (error) {
+        console.error("사용 횟수 조회 실패", error);
+      }
+    }
+
+    fetchBmcLimit();
   }, []);
 
   return (
@@ -388,9 +407,20 @@ function BMCAnalyzePage() {
 
                 {!hasAnalyzeResult ? (
                   <section className="flex-1 flex flex-col">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">
-                      2. BMC 분석
-                    </h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-bold text-gray-900">
+                        2. BMC 분석
+                      </h2>
+
+                      {bmcLimit && (
+                        <div className="text-sm font-semibold text-gray-500">
+                          오늘 분석 가능 횟수{" "}
+                          <span className="text-blue-600">
+                            {bmcLimit.remainingAnalysis}/{bmcLimit.analysisLimit}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
                     <div
                       className="
