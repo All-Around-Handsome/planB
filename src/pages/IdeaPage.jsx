@@ -10,6 +10,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { getBmcLimit } from "../api/bmc";
+
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
@@ -34,6 +36,9 @@ function IdeaPage() {
   const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
   const navigate = useNavigate();
 
+  const [bmcLimit, setBmcLimit] = useState(null);
+
+  // 입력값 변경 시 임시 저장 (페이지 이탈 후 복구용)
   useEffect(() => {
     const draft = {
       ideaTitle,
@@ -52,6 +57,7 @@ function IdeaPage() {
     searchOption,
   ]);
 
+  // 기존 프로젝트 데이터 불러오기 (BMC 생성 이후 저장된 프로젝트)
   useEffect(() => {
     const savedProject = localStorage.getItem("planb_project");
 
@@ -65,6 +71,7 @@ function IdeaPage() {
     }
   }, []);
 
+  // 이전 작성 중이던 아이디어 임시 저장 데이터 확인
   useEffect(() => {
     const draft = localStorage.getItem("currentProjectDraft");
 
@@ -72,6 +79,23 @@ function IdeaPage() {
       setDraftData(JSON.parse(draft));
       setShowDraftModal(true);
     }
+  }, []);
+
+  // AI 사용 가능 횟수 조회
+  useEffect(() => {
+    async function fetchLimit() {
+      try {
+        const response = await getBmcLimit();
+
+        if (response.success) {
+          setBmcLimit(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchLimit();
   }, []);
 
   const stepOptions = [
@@ -320,9 +344,18 @@ function IdeaPage() {
               <div className="flex items-center gap-3 h-full">
                 <ShieldCheck size={22} className="shrink-0" />
 
-                <span className="text-[#3D4770] font-medium flex items-center h-full">
-                  BMC 생성 완료 후 입력한 아이디어가 저장됩니다.
-                </span>
+                {bmcLimit && (
+                  <div className="text-sm font-semibold text-gray-500">
+                    AI 사용 가능{" "}
+                    <span className="text-blue-600">
+                      탐색 {bmcLimit.remainingExplore}/{bmcLimit.exploreLimit}
+                      {" · "}
+                      생성 {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}
+                      {" · "}
+                      분석 {bmcLimit.remainingAnalysis}/{bmcLimit.analysisLimit}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* RIGHT */}
