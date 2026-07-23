@@ -11,6 +11,7 @@ import {
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
+import BMCDisplayCanvas from "../components/BMCDisplayCanvas";
 
 import { getProjectData } from "../utils/projectStorage";
 import "../assets/font/PretendardMedium.js";
@@ -80,6 +81,35 @@ function BMCResultPage() {
       content: "초기 고객 피드백을 기반으로 지속적인 관계를 형성합니다.",
     },
   ];
+
+  const bmcData = {
+    valueProposition:
+      bmcCanvasItems.find((item) => item.title === "가치 제안")?.content || "",
+
+    customerSegments:
+      bmcCanvasItems.find((item) => item.title === "고객 세그먼트")?.content || "",
+
+    revenueStreams:
+      bmcCanvasItems.find((item) => item.title === "수익 구조")?.content || "",
+
+    costStructure:
+      bmcCanvasItems.find((item) => item.title === "비용 구조")?.content || "",
+
+    keyPartners:
+      bmcCanvasItems.find((item) => item.title === "핵심 파트너")?.content || "",
+
+    keyActivities:
+      bmcCanvasItems.find((item) => item.title === "핵심 활동")?.content || "",
+
+    keyResources:
+      bmcCanvasItems.find((item) => item.title === "핵심 자원")?.content || "",
+
+    channels:
+      bmcCanvasItems.find((item) => item.title === "채널")?.content || "",
+
+    customerRelationships:
+      bmcCanvasItems.find((item) => item.title === "고객 관계")?.content || "",
+  };
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -331,49 +361,7 @@ function BMCResultPage() {
                     1. BMC 캔버스
                   </h2>
 
-                  <div className="grid grid-cols-3 gap-4">
-                    {bmcCanvasItems.map((item, index) => (
-                      <div
-                        key={item.title}
-                        className="
-                          min-h-[135px]
-                          rounded-2xl
-                          border
-                          border-gray-200
-                          bg-white
-                          p-5
-                          shadow-sm
-                        "
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <div
-                            className="
-                              w-7
-                              h-7
-                              rounded-full
-                              bg-blue-50
-                              text-blue-600
-                              flex
-                              items-center
-                              justify-center
-                              text-xs
-                              font-extrabold
-                            "
-                          >
-                            {index + 1}
-                          </div>
-
-                          <h3 className="text-base font-bold text-gray-900">
-                            {item.title}
-                          </h3>
-                        </div>
-
-                        <p className="text-sm text-[#3D4770] leading-6">
-                          {item.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  <BMCDisplayCanvas data={bmcData} />
                 </section>
               </div>
             </div>
