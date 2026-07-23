@@ -64,6 +64,32 @@ export async function checkAnalysis() {
   });
 }
 
+// BMC 생성 결과 저장
+// POST /api/bmc
+export async function saveGeneratedBmc(data) {
+  return request("/api/bmc", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// BMC 분석 결과 저장
+// POST /api/bmc/analysis
+export async function saveBmcAnalysis(data) {
+  return request("/api/bmc/analysis", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// 내 BMC 목록 조회
+// GET /api/bmc
+export async function getBmcList() {
+  return request("/api/bmc", {
+    method: "GET",
+  });
+}
+
 // BMC 상세 조회
 // GET /api/bmc/{bmcRecordId}
 export async function getBmcDetail(id) {
@@ -72,12 +98,19 @@ export async function getBmcDetail(id) {
   });
 }
 
+// BMC 삭제
+// DELETE /api/bmc/{bmcRecordId}
+export async function deleteBmc(id) {
+  return request(`/api/bmc/${id}`, {
+    method: "DELETE",
+  });
+}
 
-// BMC 분석 결과 저장
-// POST /api/bmc/analysis
-export async function saveBmcAnalysis(data) {
-  return request("/api/bmc/analysis", {
-    method: "POST",
+// BMC 항목 수정
+// PATCH /api/bmc/items/{itemId}
+export async function updateBmcItem(itemId, data) {
+  return request(`/api/bmc/items/${itemId}`, {
+    method: "PATCH",
     body: JSON.stringify(data),
   });
 }
