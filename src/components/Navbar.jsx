@@ -14,17 +14,21 @@ function Navbar() {
         {},
         {
           headers: {
-            Authorization:
-              `Bearer ${localStorage.getItem("accessToken")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
         }
       );
 
       logout();
-
       window.location.href = "/";
-
     } catch (error) {
+      if (error.response?.status === 401) {
+        // 토큰이 만료된 경우에도 프론트는 로그아웃 처리
+        logout();
+        window.location.href = "/";
+        return;
+      }
+
       console.error("로그아웃 실패", error);
     }
   };
