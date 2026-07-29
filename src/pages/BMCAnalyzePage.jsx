@@ -189,6 +189,15 @@ function BMCAnalyzePage() {
 
   const handleAnalyze = async () => {
     try {
+
+      // 분석 횟수 차감
+      const limitResponse = await checkAnalysis();
+
+      if (!limitResponse.success || !limitResponse.data.canProceed) {
+        alert("오늘 BMC 분석 가능 횟수를 모두 사용했습니다.");
+        return;
+      }
+
       setIsAnalyzing(true);
 
       // AI 분석
@@ -274,6 +283,9 @@ function BMCAnalyzePage() {
         analysisResult: analyzeResult,
       });    
 
+      const updatedLimit = await getBmcLimit();
+      setBmcLimit(updatedLimit.data);
+      
       setAnalysisResult(analyzeResult);
       setHasAnalyzeResult(true);
 
