@@ -18,6 +18,10 @@ import GoogleCallback from "../pages/oauth/GoogleCallback";
 
 import ScrollToTop from "../components/ScrollToTop";
 
+// 테스트용
+import MyPageApiTest from "../pages/MyPageApiTest";
+
+
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -101,6 +105,17 @@ function AppRouter() {
             </MemberRoute>
           }
         />
+
+        {/* 테스트용 */}
+        <Route
+          path="/my/test"
+          element={
+            <MemberRoute>
+              <MyPageApiTest />
+            </MemberRoute>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
   );
