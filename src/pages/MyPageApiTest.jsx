@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Copy,
+  Download,
   Edit3,
   FileText,
   Heart,
@@ -51,29 +51,36 @@ function MyPageApiTest() {
 
       if (response.success) {
 
-        const mappedProjects = response.data.map((bmc) => ({
-          id: bmc.bmcRecordId,
+        const mappedProjects = response.data
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .map((bmc) => ({
+            id: bmc.bmcRecordId,
 
-          icon:
-            bmc.bmcType === "AI_GENERATED"
-              ? <Sparkles size={18} />
-              : <BarChart3 size={18} />,
+            icon:
+              bmc.bmcType === "AI_GENERATED"
+                ? <Sparkles size={18} />
+                : <BarChart3 size={18} />,
 
-          name: bmc.ideaText,
+            // 아이디어 요약
+            name: bmc.ideaText,
 
-          createdAt: bmc.createdAt,
-          updatedAt: bmc.createdAt,
+            // 생성일
+            createdAt: bmc.createdAt,
 
-          bmcType:
-            bmc.bmcType === "AI_GENERATED"
-              ? "AI 생성"
-              : "직접 분석",
+            // 타당성 점수
+            score: bmc.validityScore,
 
-          bmcTypeCode:
-            bmc.bmcType === "AI_GENERATED"
-              ? "ai"
-              : "direct",
-        }));
+            // 타입
+            bmcType:
+              bmc.bmcType === "AI_GENERATED"
+                ? "AI 생성"
+                : "직접 분석",
+
+            bmcTypeCode:
+              bmc.bmcType === "AI_GENERATED"
+                ? "ai"
+                : "direct",
+          }));
 
         setProjects(mappedProjects);
       }
@@ -185,11 +192,6 @@ function MyPageApiTest() {
     setTimeout(() => {
       setToastMessage("");
     }, 2000);
-  };
-
-  const handleCopy = (project) => {
-    navigator.clipboard.writeText(project.name);
-    showToast("프로젝트명이 복사되었습니다.");
   };
 
   const handleDelete = (project) => {
@@ -406,10 +408,10 @@ function MyPageApiTest() {
                   <table className="w-full">
                     <thead>
                       <tr className="h-12 bg-[#F8FAFF] border-b border-gray-100 text-xs text-gray-500">
-                        <th className="text-left px-5 font-bold">프로젝트명</th>
+                        <th className="text-left px-5 font-bold">아이디어 요약</th>
                         <th className="text-left px-3 font-bold">생성일</th>
-                        <th className="text-left px-3 font-bold">최종 수정일</th>
-                        <th className="text-left px-3 font-bold">상태</th>
+                        <th className="text-center px-3 font-bold">타당성 점수</th>
+                        <th className="text-center px-3 font-bold">타입</th>
                         <th className="text-center px-3 font-bold">작업</th>
                       </tr>
                     </thead>
@@ -420,28 +422,34 @@ function MyPageApiTest() {
                           key={project.id}
                           className="h-[58px] border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30 transition"
                         >
+                          {/* 아이디어 요약 */}
                           <td className="px-5">
                             <div className="flex items-center gap-3">
                               <div className="text-blue-500">{project.icon}</div>
 
                               <button
                                 onClick={() => handleEdit(project)}
-                                className="text-sm font-bold text-[#071642] hover:text-blue-600 transition text-left"
+                                className="text-sm font-bold text-[#071642] hover:text-blue-600 transition text-left truncate"
                               >
                                 {project.name}
                               </button>
                             </div>
                           </td>
 
+                          {/* 생성일 */}
                           <td className="px-3 text-xs font-medium text-[#3D4770]">
                             {formatDateTime(project.createdAt)}
                           </td>
 
-                          <td className="px-3 text-xs font-medium text-[#3D4770]">
-                            {formatDateTime(project.updatedAt)}
+                          {/* 타당성 점수 */}
+                          <td className="px-3 text-center">
+                            <span className="font-bold text-[#071642]">
+                              {project.score ?? "-"}
+                            </span>
                           </td>
 
-                          <td className="px-3">
+                          {/* 타입 */}
+                          <td className="px-3 text-center">
                             <span
                               className={`
                                 px-3
@@ -456,27 +464,28 @@ function MyPageApiTest() {
                             </span>
                           </td>
 
+                          {/* 작업 */}
                           <td className="px-3">
-                            <div className="flex items-center justify-center gap-3 text-gray-400">
+                            <div className="flex items-center justify-center gap-3">
                               <button
                                 onClick={() => handleEdit(project)}
-                                className="hover:text-blue-600 transition"
+                                className="text-gray-400 hover:text-blue-600 transition"
                                 title="편집"
                               >
                                 <Edit3 size={16} />
                               </button>
 
+                              {/* 추후 Export API 연결 */}
                               <button
-                                onClick={() => handleCopy(project)}
-                                className="hover:text-blue-600 transition"
-                                title="복사"
+                                className="text-gray-400 hover:text-blue-600 transition"
+                                title="내보내기"
                               >
-                                <Copy size={16} />
+                                <Download size={16} />
                               </button>
 
                               <button
                                 onClick={() => handleDelete(project)}
-                                className="hover:text-red-500 transition"
+                                className="text-gray-400 hover:text-red-500 transition"
                                 title="삭제"
                               >
                                 <Trash2 size={16} />
