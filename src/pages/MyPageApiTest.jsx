@@ -34,6 +34,9 @@ function MyPageApiTest() {
 
   const [projects, setProjects] = useState([]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const user = {
     name: "가이드님",
     email: "guide@example.com",
@@ -85,6 +88,10 @@ function MyPageApiTest() {
     console.log("MyPageApiTest mounted");
     loadBmcList();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, filter]);
 
   const stats = [
     {
@@ -155,6 +162,22 @@ function MyPageApiTest() {
       return matchesKeyword && matchesFilter;
     });
   }, [projects, searchKeyword, filter]);
+
+  const totalPages = Math.ceil(
+    filteredProjects.length / pageSize
+  );
+
+
+  const paginatedProjects = useMemo(() => {
+    const start =
+      (currentPage - 1) * pageSize;
+
+    return filteredProjects.slice(
+      start,
+      start + pageSize
+    );
+
+  }, [filteredProjects, currentPage]);
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -392,7 +415,7 @@ function MyPageApiTest() {
                     </thead>
 
                     <tbody>
-                      {filteredProjects.map((project) => (
+                      {paginatedProjects.map((project) => (
                         <tr
                           key={project.id}
                           className="h-[58px] border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30 transition"
@@ -474,23 +497,33 @@ function MyPageApiTest() {
 
                 {/* Pagination */}
                 <div className="flex items-center justify-center gap-2 mt-5">
-                  <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                  >
                     <ChevronLeft size={16} />
                   </button>
 
-                  <button className="w-8 h-8 rounded-lg bg-blue-600 text-white text-sm font-bold">
-                    1
-                  </button>
+                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-sm font-bold ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
 
-                  <button className="w-8 h-8 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100">
-                    2
-                  </button>
-
-                  <button className="w-8 h-8 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100">
-                    3
-                  </button>
-
-                  <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                  <button
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                  >
                     <ChevronRight size={16} />
                   </button>
                 </div>
