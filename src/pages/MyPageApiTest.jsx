@@ -154,20 +154,26 @@ function MyPageApiTest() {
     },
   ];
 
-  const recentActivities = [
-    {
-      title: "AI 기반 맞춤형 헬스케어...",
-      time: "10분 전",
-    },
-    {
-      title: "마케팅 자동화 서비스",
-      time: "1시간 전",
-    },
-    {
-      title: "스마트 물류 관리 솔루션",
-      time: "3시간 전",
-    },
-  ];
+  const formatDateTime = (date) => {
+    if (!date) return "-";
+
+    const [datePart, timePart] = date.split("T");
+
+    return `${datePart.replaceAll("-", ".")} ${timePart.slice(0, 5)}`;
+  };
+
+  const latestAnalysis = useMemo(() => {
+    return projects
+      .filter(
+        (project) =>
+          project.score !== null &&
+          project.score !== undefined
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt) - new Date(a.createdAt)
+      )[0];
+  }, [projects]);
 
   const loadBmcLimit = async () => {
     try {
@@ -241,13 +247,6 @@ function MyPageApiTest() {
     return "bg-purple-50 text-purple-600";
   };
 
-  const formatDateTime = (date) => {
-    if (!date) return "-";
-
-    const [datePart, timePart] = date.split("T");
-
-    return `${datePart.replaceAll("-", ".")} ${timePart.slice(0, 5)}`;
-  };
 
   return (
     <MainLayout>
@@ -569,34 +568,47 @@ function MyPageApiTest() {
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-base font-extrabold text-gray-900">
-                      최근 활동
+                      최근 분석 이력
                     </h3>
-
-                    <button className="text-xs text-gray-400 font-bold hover:text-blue-600 transition">
-                      더보기
-                    </button>
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    {recentActivities.map((item) => (
-                      <div
-                        key={item.title}
-                        className="flex items-center gap-3"
-                      >
-                        <FileText size={16} className="text-blue-500 shrink-0" />
+                    {latestAnalysis ? (
+                      <div className="rounded-xl bg-blue-50/50 p-4">
 
-                        <p className="flex-1 text-xs font-medium text-[#3D4770] truncate">
-                          {item.title}
-                        </p>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="text-blue-500">
+                            {latestAnalysis.icon}
+                          </div>
 
-                        <span className="text-[11px] text-gray-400 shrink-0">
-                          {item.time}
-                        </span>
+                          <p className="flex-1 text-sm font-bold text-[#071642] truncate">
+                            {latestAnalysis.name}
+                          </p>
+                        </div>
+
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">
+                            타당성 점수
+                          </span>
+
+                          <span className="text-xl font-extrabold text-blue-600">
+                            {latestAnalysis.score}점
+                          </span>
+                        </div>
+
                       </div>
-                    ))}
+                    ) : (
+                      <div className="h-[100px] flex items-center justify-center text-sm text-gray-400">
+                        아직 분석 이력이 없습니다.
+                      </div>
+                    )}
                   </div>
 
+
                   <button
+                    onClick={() => navigate(`/bmc/result/${latestAnalysis.id}`)}
+                    disabled={!latestAnalysis}
                     className="
                       w-full
                       h-10
@@ -609,9 +621,10 @@ function MyPageApiTest() {
                       font-bold
                       hover:bg-blue-50
                       transition
+                      disabled:opacity-40
                     "
                   >
-                    전체 활동 보기
+                    분석 결과 보기
                   </button>
                 </div>
 
