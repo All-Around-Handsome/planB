@@ -34,6 +34,7 @@ function BMCCreatePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
   const [generatedBmc, setGeneratedBmc] = useState(null);
+  const [bmcRecordId, setBmcRecordId] = useState(null);
 
   useEffect(() => {
     const savedProject = getProjectData();
@@ -118,8 +119,12 @@ function BMCCreatePage() {
       });
 
       if (saveResult.success) {
-        const bmcRecordId = saveResult.data.bmcRecordId;
-        console.log("저장된 BMC ID:", bmcRecordId);
+        const id = saveResult.data.bmcRecordId;
+
+        setBmcRecordId(id);
+        setIsGenerated(true);
+
+        console.log("저장된 BMC ID:", id);
       }
 
       setIsGenerated(true);
@@ -135,7 +140,10 @@ function BMCCreatePage() {
   };
 
   const handleNext = () => {
-    navigate("/bmc/result");
+    if (!bmcRecordId) {
+      return;
+    }
+    navigate(`/bmc/result/${bmcRecordId}`);
   };
 
   return (

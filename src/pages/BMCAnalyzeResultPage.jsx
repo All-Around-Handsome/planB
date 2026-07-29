@@ -19,7 +19,6 @@ import Sidebar from "../components/Sidebar.jsx";
 import ProjectNav from "../components/ProjectNav.jsx";
 import BMCDisplayCanvas from "../components/BMCDisplayCanvas";
 
-import { getProjectData } from "../utils/projectStorage";
 import "../assets/font/PretendardMedium.js";
 
 function BMCAnalyzeResultPage() {
@@ -34,20 +33,6 @@ function BMCAnalyzeResultPage() {
     summary:
       "현재 비즈니스 모델은 고객 문제와 가치 제안이 비교적 명확하며, 초기 시장 진입 가능성이 있습니다. 다만 수익 구조와 고객 관계 전략을 조금 더 구체화할 필요가 있습니다.",
   });
-
-  useEffect(() => {
-    const savedProject = getProjectData();
-
-    console.log("BMCAnalyzeResult savedProject:", savedProject);
-
-    if (savedProject) {
-      setProject((prev) => ({
-        ...prev,
-        ideaTitle: savedProject.ideaTitle ?? "",
-        ideaContent: savedProject.ideaContent ?? "",
-      }));
-    }
-  }, []);
 
   const createdAt = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",

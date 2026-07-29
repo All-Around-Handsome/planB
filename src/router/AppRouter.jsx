@@ -79,6 +79,7 @@ function AppRouter() {
           }
         />
 
+        {/* 제거 예정 */}
         <Route
           path="/bmc/result"
           element={
@@ -89,7 +90,26 @@ function AppRouter() {
         />
 
         <Route
+          path="/bmc/result/:bmcRecordId"
+          element={
+            <MemberRoute>
+              <BMCResultPage />
+            </MemberRoute>
+          }
+        />
+
+        {/* 제거 예정 */}
+        <Route
           path="/bmc/analyze/result"
+          element={
+            <MemberRoute>
+              <BMCAnalyzeResultPage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
+          path="/bmc/analyze/result/:bmcRecordId"
           element={
             <MemberRoute>
               <BMCAnalyzeResultPage />

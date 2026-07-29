@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import {
@@ -7,6 +7,8 @@ import {
   Download,
   RotateCcw,
 } from "lucide-react";
+
+import { getBmcDetail } from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
@@ -18,6 +20,19 @@ import "../assets/font/PretendardMedium.js";
 
 function BMCResultPage() {
   const navigate = useNavigate();
+  const { bmcRecordId } = useParams();
+
+  useEffect(() => {
+    async function fetchBmcDetail() {
+      const response = await getBmcDetail(bmcRecordId);
+
+      if (response.success) {
+        setBmc(response.data);
+      }
+    }
+
+    fetchBmcDetail();
+  }, [bmcRecordId]);
 
   const [toastMessage, setToastMessage] = useState("");
 

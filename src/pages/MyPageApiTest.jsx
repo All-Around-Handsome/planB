@@ -541,7 +541,13 @@ function MyPageApiTest() {
                               </button>
 
                               <button
-                                onClick={() => navigate(`/bmc/result/${project.id}`)}
+                                onClick={() =>
+                                  navigate(
+                                    project.bmcTypeCode === "ai"
+                                      ? `/bmc/result/${project.id}`
+                                      : `/bmc/analyze/result/${project.id}`
+                                  )
+                                }
                                 className="text-gray-400 hover:text-blue-600 transition"
                                 title="내보내기"
                               >
@@ -647,7 +653,13 @@ function MyPageApiTest() {
 
 
                   <button
-                    onClick={() => navigate(`/bmc/result/${latestAnalysis.id}`)}
+                    onClick={() =>
+                      navigate(
+                        latestAnalysis.bmcTypeCode === "ai"
+                          ? `/bmc/result/${latestAnalysis.id}`
+                          : `/bmc/analyze/result/${latestAnalysis.id}`
+                      )
+                    }
                     disabled={!latestAnalysis}
                     className="
                       w-full
