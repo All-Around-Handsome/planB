@@ -6,8 +6,12 @@ import {
   Sparkles,
   CheckCircle2,
 } from "lucide-react";
-
-import { getBmcLimit } from "../api/bmc";
+import { generateBmc } from "../api/bmcAi";
+import {
+  getBmcLimit,
+  checkGeneration,
+  saveGeneratedBmc,
+} from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
@@ -29,6 +33,7 @@ function BMCCreatePage() {
   const [bmcLimit, setBmcLimit] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [generatedBmc, setGeneratedBmc] = useState(null);
 
   useEffect(() => {
     const savedProject = getProjectData();
@@ -52,8 +57,77 @@ function BMCCreatePage() {
     fetchBmcLimit();
   }, []);
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
+  const handleGenerate = async () => {
+    try {
+      setIsGenerating(true);
+
+      // 1. 생성 횟수 차감
+      await checkGeneration();
+
+      // 2. AI 생성
+      const aiResult = await generateBmc({
+        idea: project.ideaContent,
+      });
+
+      // 화면에 저장
+      setGeneratedBmc(aiResult);
+
+      // 3. 생성 결과 저장
+      const saveResult = await saveGeneratedBmc({
+        ideaText: project.ideaContent,
+        stage: "IDEA",
+        bmcType: "AI_GENERATED",
+        items: [
+          {
+            itemType: "VALUE_PROPOSITION",
+            content: aiResult.valueProposition,
+          },
+          {
+            itemType: "CUSTOMER_SEGMENT",
+            content: aiResult.customerSegments,
+          },
+          {
+            itemType: "REVENUE_STREAM",
+            content: aiResult.revenueStreams,
+          },
+          {
+            itemType: "COST_STRUCTURE",
+            content: aiResult.costStructure,
+          },
+          {
+            itemType: "KEY_PARTNERS",
+            content: aiResult.keyPartners,
+          },
+          {
+            itemType: "KEY_ACTIVITIES",
+            content: aiResult.keyActivities,
+          },
+          {
+            itemType: "KEY_RESOURCES",
+            content: aiResult.keyResources,
+          },
+          {
+            itemType: "CHANNELS",
+            content: aiResult.channels,
+          },
+          {
+            itemType: "CUSTOMER_RELATIONSHIPS",
+            content: aiResult.customerRelationships,
+          },
+        ],
+      });
+
+      if (saveResult.success) {
+        const bmcRecordId = saveResult.data.bmcRecordId;
+        console.log("저장된 BMC ID:", bmcRecordId);
+      }
+
+      setIsGenerated(true);
+    } catch (error) {
+      console.error("BMC 생성 실패", error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handlePrev = () => {
@@ -140,13 +214,7 @@ function BMCCreatePage() {
                       "
                     >
                       {isGenerating ? (
-                        <BMCLoading
-                          duration={3000}
-                          onComplete={() => {
-                            setIsGenerating(false);
-                            setIsGenerated(true);
-                          }}
-                        />
+                        <BMCLoading duration={3000} />
                       ) : (
                         <>
                           <div className="w-20 h-20 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-6">
@@ -196,8 +264,8 @@ function BMCCreatePage() {
                             핵심 파트너
                           </h3>
 
-                          <p className="text-sm text-[#3D4770] leading-6">
-                            서비스 운영에 필요한 협력사, 플랫폼, 데이터 제공자 등이 표시됩니다.
+                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                            {generatedBmc?.keyPartners}
                           </p>
                         </div>
 
@@ -208,8 +276,8 @@ function BMCCreatePage() {
                               핵심 활동
                             </h3>
 
-                            <p className="text-sm text-[#3D4770] leading-6">
-                              서비스 개발, 고객 확보, 데이터 분석 등 핵심 활동이 표시됩니다.
+                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                              {generatedBmc?.keyActivities}
                             </p>
                           </div>
 
@@ -218,8 +286,8 @@ function BMCCreatePage() {
                               핵심 자원
                             </h3>
 
-                            <p className="text-sm text-[#3D4770] leading-6">
-                              서비스 구현에 필요한 기술, 인력, 데이터, 자산이 표시됩니다.
+                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                              {generatedBmc?.keyResources}
                             </p>
                           </div>
                         </div>
@@ -230,8 +298,8 @@ function BMCCreatePage() {
                             가치 제안
                           </h3>
 
-                          <p className="text-sm text-[#3D4770] leading-6">
-                            고객에게 제공하는 핵심 가치와 차별화 요소가 표시됩니다.
+                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                            {generatedBmc?.valueProposition}
                           </p>
                         </div>
 
@@ -242,8 +310,8 @@ function BMCCreatePage() {
                               고객 관계
                             </h3>
 
-                            <p className="text-sm text-[#3D4770] leading-6">
-                              고객과의 관계 형성 방식과 유지 전략이 표시됩니다.
+                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                              {generatedBmc?.customerRelationships}
                             </p>
                           </div>
 
@@ -252,8 +320,8 @@ function BMCCreatePage() {
                               채널
                             </h3>
 
-                            <p className="text-sm text-[#3D4770] leading-6">
-                              고객에게 서비스를 전달하는 경로와 마케팅 채널이 표시됩니다.
+                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                              {generatedBmc?.channels}
                             </p>
                           </div>
                         </div>
@@ -264,8 +332,8 @@ function BMCCreatePage() {
                             고객 세그먼트
                           </h3>
 
-                          <p className="text-sm text-[#3D4770] leading-6">
-                            주요 고객군과 타깃 사용자가 표시됩니다.
+                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                            {generatedBmc?.customerSegments}
                           </p>
                         </div>
                       </div>
@@ -277,8 +345,8 @@ function BMCCreatePage() {
                             비용 구조
                           </h3>
 
-                          <p className="text-sm text-[#3D4770] leading-6">
-                            개발비, 운영비, 마케팅비 등 주요 비용 구조가 표시됩니다.
+                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                            {generatedBmc?.costStructure}
                           </p>
                         </div>
 
@@ -287,8 +355,8 @@ function BMCCreatePage() {
                             수익 구조
                           </h3>
 
-                          <p className="text-sm text-[#3D4770] leading-6">
-                            구독료, 수수료, 광고 등 수익 창출 방식이 표시됩니다.
+                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
+                            {generatedBmc?.revenueStreams}
                           </p>
                         </div>
                       </div>
