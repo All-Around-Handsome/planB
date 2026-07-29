@@ -10,7 +10,6 @@ import {
   Download,
   Edit3,
   FileText,
-  Heart,
   Plus,
   Search,
   Settings,
@@ -20,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 
-import { getBmcList } from "../api/bmc";
+import { getBmcList, getBmcLimit } from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -31,8 +30,10 @@ function MyPageApiTest() {
   const [filter, setFilter] = useState("all");
   const [toastMessage, setToastMessage] = useState("");
   const [isSettingOpen, setIsSettingOpen] = useState(false);
-
+  
   const [projects, setProjects] = useState([]);
+
+  const [bmcLimit, setBmcLimit] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -93,43 +94,60 @@ function MyPageApiTest() {
 
   useEffect(() => {
     console.log("MyPageApiTest mounted");
+
     loadBmcList();
+    loadBmcLimit();
   }, []);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchKeyword, filter]);
 
+  const aiProjectCount = projects.filter(
+    (project) => project.bmcTypeCode === "ai"
+  ).length;
+
+  const directProjectCount = projects.filter(
+    (project) => project.bmcTypeCode === "direct"
+  ).length;
+
+  const totalAiRemaining =
+    bmcLimit
+      ? (bmcLimit.remainingSearch ?? 0) +
+        (bmcLimit.remainingGeneration ?? 0) +
+        (bmcLimit.remainingAnalysis ?? 0)
+      : 0;
+
   const stats = [
     {
       icon: <FileText size={22} />,
       title: "전체 프로젝트",
-      value: 12,
-      unit: "개",
-      change: "+3",
-      desc: "지난 7일",
-    },
-    {
-      icon: <FileText size={22} />,
-      title: "분석 완료 프로젝트",
-      value: 9,
-      unit: "개",
-      change: "+2",
-      desc: "지난 7일",
-    },
-    {
-      icon: <FileText size={22} />,
-      title: "저장된 BMC",
-      value: 12,
+      value: projects.length,
       unit: "개",
       change: null,
       desc: "",
     },
     {
-      icon: <Heart size={22} />,
-      title: "스크랩 서비스",
-      value: 15,
+      icon: <Sparkles size={22} />,
+      title: "AI 생성 프로젝트",
+      value: aiProjectCount,
       unit: "개",
+      change: null,
+      desc: "",
+    },
+    {
+      icon: <BarChart3 size={22} />,
+      title: "직접 분석 프로젝트",
+      value: directProjectCount,
+      unit: "개",
+      change: null,
+      desc: "",
+    },
+    {
+      icon: <Sparkles size={22} />,
+      title: "AI 사용량",
+      value: totalAiRemaining,
+      unit: "회",
       change: null,
       desc: "",
     },
@@ -150,10 +168,17 @@ function MyPageApiTest() {
     },
   ];
 
-  const favoriteBmcs = [
-    "AI 기반 맞춤형 헬스케어 플랫폼",
-    "스마트 물류 관리 솔루션",
-  ];
+  const loadBmcLimit = async () => {
+    try {
+      const response = await getBmcLimit();
+
+      if (response.success) {
+        setBmcLimit(response.data);
+      }
+    } catch (error) {
+      console.error("AI 사용량 조회 실패", error);
+    }
+  };
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -590,52 +615,53 @@ function MyPageApiTest() {
                 </div>
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Sparkles size={18} className="text-blue-500" />
+
                     <h3 className="text-base font-extrabold text-gray-900">
-                      즐겨찾기 BMC
+                      AI 사용 현황
                     </h3>
-
-                    <button className="text-xs text-gray-400 font-bold hover:text-blue-600 transition">
-                      더보기
-                    </button>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    {favoriteBmcs.map((item) => (
-                      <button
-                        key={item}
-                        onClick={() => navigate("/bmc/result")}
-                        className="flex items-center gap-3 text-left group"
-                      >
-                        <Heart
-                          size={16}
-                          className="text-gray-400 shrink-0 group-hover:text-blue-500"
-                        />
+                  <div className="space-y-5">
 
-                        <p className="text-xs font-medium text-[#3D4770] group-hover:text-blue-600 transition truncate">
-                          {item}
-                        </p>
-                      </button>
-                    ))}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        경쟁탐색
+                      </span>
+
+                      <span className="font-bold text-gray-900">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingSearch} / ${bmcLimit.searchLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        BMC 생성
+                      </span>
+
+                      <span className="font-bold text-blue-600">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingGeneration} / ${bmcLimit.generationLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        BMC 분석
+                      </span>
+
+                      <span className="font-bold text-purple-600">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingAnalysis} / ${bmcLimit.analysisLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
                   </div>
-
-                  <button
-                    className="
-                      w-full
-                      h-10
-                      mt-5
-                      rounded-xl
-                      border
-                      border-blue-100
-                      text-blue-600
-                      text-sm
-                      font-bold
-                      hover:bg-blue-50
-                      transition
-                    "
-                  >
-                    전체 즐겨찾기 보기
-                  </button>
                 </div>
               </aside>
             </div>
