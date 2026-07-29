@@ -10,6 +10,7 @@ import {
   Download,
   Edit3,
   FileText,
+  LayoutTemplate,
   Plus,
   Search,
   Settings,
@@ -59,7 +60,7 @@ function MyPageApiTest() {
 
             icon:
               bmc.bmcType === "AI_GENERATED"
-                ? <Sparkles size={18} />
+                ? <LayoutTemplate size={18} />
                 : <BarChart3 size={18} />,
 
             // 아이디어 요약
@@ -128,7 +129,7 @@ function MyPageApiTest() {
       desc: "",
     },
     {
-      icon: <Sparkles size={22} />,
+      icon: <LayoutTemplate size={22} />,
       title: "AI 생성 프로젝트",
       value: aiProjectCount,
       unit: "개",

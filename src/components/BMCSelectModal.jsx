@@ -1,4 +1,4 @@
-import { Sparkles, LayoutTemplate } from "lucide-react";
+import { LayoutTemplate, BarChart3 } from "lucide-react";
 
 function BMCSelectModal({
   open,
@@ -51,7 +51,7 @@ function BMCSelectModal({
               active:scale-[0.98]
             "
           >
-            <Sparkles
+            <LayoutTemplate
               className="text-blue-600 mb-4"
               size={28}
             />
@@ -83,7 +83,7 @@ function BMCSelectModal({
               active:scale-[0.98]
             "
           >
-            <LayoutTemplate
+            <BarChart3
               className="text-blue-600 mb-4"
               size={28}
             />

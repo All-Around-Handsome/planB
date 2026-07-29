@@ -1,7 +1,7 @@
 import {
   Edit3,
   Search,
-  FileText,
+  LayoutTemplate,
   BarChart3,
   LogOut,
 } from "lucide-react";
@@ -24,7 +24,7 @@ function ProjectNav() {
       path: "/explore",
     },
     {
-      icon: <FileText size={24} />,
+      icon: <LayoutTemplate size={24} />,
       label: "BMC 생성",
       path: "/bmc/create",
     },

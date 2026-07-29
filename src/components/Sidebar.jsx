@@ -1,6 +1,6 @@
 import {
   Edit3,
-  FileText,
+  LayoutTemplate,
   Search,
   BarChart3,
   LogOut,
@@ -97,7 +97,7 @@ function Sidebar({ activeStep = "idea" }) {
     },
     {
       id: "create",
-      icon: <FileText size={34} />,
+      icon: <LayoutTemplate size={34} />,
       title: "AI 기반 BMC 생성",
       desc: (
         <>
