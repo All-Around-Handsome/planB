@@ -24,7 +24,15 @@ const mockAnalyzeResponse = {
   risks: [
     {
       risk: "초기 고객 확보 어려움",
-      mitigation: "무료 체험과 초기 고객 인터뷰를 통해 검증 필요",
+      mitigation: "무료 체험과 고객 인터뷰 진행",
+    },
+    {
+      risk: "경쟁 서비스와 차별화 부족",
+      mitigation: "핵심 기능 차별화 전략 수립",
+    },
+    {
+      risk: "초기 운영 비용 부담",
+      mitigation: "MVP 개발 후 단계적 확장",
     },
   ],
   actionItems: [

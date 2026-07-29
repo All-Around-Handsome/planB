@@ -12,15 +12,26 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import { getBmcLimit } from "../api/bmc";
-import { checkAnalysis } from "../api/bmc";
+import { 
+  getBmcLimit,
+  saveBmcAnalysis,
+  checkAnalysis,
+ } from "../api/bmc";
+
+import {
+  analyzeBmc,
+} from "../api/bmcAi";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
 import ProjectNav from "../components/ProjectNav";
 import BMCAnalyzeLoading from "../components/BMCAnalyzeLoading";
 
-import { getProjectData } from "../utils/projectStorage";
+
+import {
+  getProjectData,
+  saveProjectData,
+} from "../utils/projectStorage";
 
 function BMCAnalyzePage() {
   const navigate = useNavigate();
@@ -76,11 +87,30 @@ function BMCAnalyzePage() {
   const handleBlur = () => setActiveSection(null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const savedProject = getProjectData();
+
+  const [analysisResult, setAnalysisResult] = useState(
+    savedProject?.analysisResult || null
+  );
+
   const [hasAnalyzeResult, setHasAnalyzeResult] = useState(
-    project.analysisResult !== null
+    !!savedProject?.analysisResult
   );
 
   const [bmcLimit, setBmcLimit] = useState(null);
+
+  const [bmc, setBmc] = useState({
+    keyPartners: "",
+    keyActivities: "",
+    keyResources: "",
+    valueProposition: "",
+    customerRelationships: "",
+    channels: "",
+    customerSegments: "",
+    costStructure: "",
+    revenueStreams: "",
+  });
 
   const bmcItems = [
     {
@@ -157,12 +187,101 @@ function BMCAnalyzePage() {
     },
   ];
 
-  const handleAnalyze = () => {
-    /**
-     * 지금은 디자인 확인용
-     * 나중에는 현재 projectId + bmc 데이터를 백엔드/AI로 보내면 됨
-     */
-    setIsAnalyzing(true);
+  const handleAnalyze = async () => {
+    try {
+      setIsAnalyzing(true);
+
+      // AI 분석
+      const analyzeResult = await analyzeBmc({
+        valueProposition: bmc.valueProposition,
+        customerSegments: bmc.customerSegments,
+        revenueStreams: bmc.revenueStreams,
+        costStructure: bmc.costStructure,
+        keyPartners: bmc.keyPartners,
+        keyActivities: bmc.keyActivities,
+        keyResources: bmc.keyResources,
+        channels: bmc.channels,
+        customerRelationships: bmc.customerRelationships,
+      });
+
+      // DB 저장
+      await saveBmcAnalysis({
+        ideaText: ideaTitle,
+        stage: "VALIDATION",
+
+        items: [
+          {
+            itemType: "VALUE_PROPOSITION",
+            content: bmc.valueProposition,
+          },
+          {
+            itemType: "CUSTOMER_SEGMENT",
+            content: bmc.customerSegments,
+          },
+          {
+            itemType: "REVENUE_STREAM",
+            content: bmc.revenueStreams,
+          },
+          {
+            itemType: "COST_STRUCTURE",
+            content: bmc.costStructure,
+          },
+          {
+            itemType: "KEY_PARTNERS",
+            content: bmc.keyPartners,
+          },
+          {
+            itemType: "KEY_ACTIVITIES",
+            content: bmc.keyActivities,
+          },
+          {
+            itemType: "KEY_RESOURCES",
+            content: bmc.keyResources,
+          },
+          {
+            itemType: "CHANNELS",
+            content: bmc.channels,
+          },
+          {
+            itemType: "CUSTOMER_RELATIONSHIPS",
+            content: bmc.customerRelationships,
+          },
+        ],
+
+        validityScore: analyzeResult.viabilityScore,
+        scoreReason: analyzeResult.scoreRationale,
+
+        risks: analyzeResult.risks.map((risk) => ({
+          riskContent: risk.risk,
+          responseContent: risk.mitigation,
+        })),
+
+        actions: analyzeResult.actionItems.map((item) => ({
+          actionContent: item.action,
+          termType:
+            item.term === "단기"
+              ? "SHORT"
+              : item.term === "중기"
+              ? "MID"
+              : "LONG",
+        })),
+      });
+
+      const currentProject = getProjectData();
+
+      saveProjectData({
+        ...currentProject,
+        analysisResult: analyzeResult,
+      });    
+
+      setAnalysisResult(analyzeResult);
+      setHasAnalyzeResult(true);
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handlePrev = () => {
@@ -280,6 +399,13 @@ function BMCAnalyzePage() {
                         </h3>
 
                         <textarea
+                          value={bmc.keyPartners}
+                          onChange={(e) =>
+                            setBmc((prev) => ({
+                              ...prev,
+                              keyPartners: e.target.value,
+                            }))
+                          }
                           placeholder="핵심 파트너를 입력하세요"
                           onFocus={() => handleFocus("keyPartners")}
                           onBlur={handleBlur}
@@ -295,6 +421,13 @@ function BMCAnalyzePage() {
                           </h3>
 
                           <textarea
+                            value={bmc.keyActivities}
+                            onChange={(e) =>
+                              setBmc((prev) => ({
+                                ...prev,
+                                keyActivities: e.target.value,
+                              }))
+                            }
                             placeholder="핵심 활동을 입력하세요"
                             onFocus={() => handleFocus("keyActivities")}
                             onBlur={handleBlur}
@@ -308,6 +441,13 @@ function BMCAnalyzePage() {
                           </h3>
 
                           <textarea
+                            value={bmc.keyResources}
+                            onChange={(e) =>
+                              setBmc((prev) => ({
+                                ...prev,
+                                keyResources: e.target.value,
+                              }))
+                            }
                             placeholder="핵심 자원을 입력하세요"
                             onFocus={() => handleFocus("keyResources")}
                             onBlur={handleBlur}
@@ -323,6 +463,13 @@ function BMCAnalyzePage() {
                         </h3>
 
                         <textarea
+                          value={bmc.valueProposition}
+                          onChange={(e) =>
+                            setBmc((prev) => ({
+                              ...prev,
+                              valueProposition: e.target.value,
+                            }))
+                          }
                           placeholder="고객에게 제공할 핵심 가치를 입력하세요"
                           onFocus={() => handleFocus("valueProposition")}
                           onBlur={handleBlur}
@@ -338,6 +485,13 @@ function BMCAnalyzePage() {
                           </h3>
 
                           <textarea
+                            value={bmc.customerRelationships}
+                            onChange={(e) =>
+                              setBmc((prev) => ({
+                                ...prev,
+                                customerRelationships: e.target.value,
+                              }))
+                            }
                             placeholder="고객 관계 전략을 입력하세요"
                             onFocus={() => handleFocus("customerRelationships")}
                             onBlur={handleBlur}
@@ -351,6 +505,13 @@ function BMCAnalyzePage() {
                           </h3>
 
                           <textarea
+                            value={bmc.channels}
+                            onChange={(e) =>
+                              setBmc((prev) => ({
+                                ...prev,
+                                channels: e.target.value,
+                              }))
+                            }
                             placeholder="채널을 입력하세요"
                             onFocus={() => handleFocus("channels")}
                             onBlur={handleBlur}
@@ -366,6 +527,13 @@ function BMCAnalyzePage() {
                         </h3>
 
                         <textarea
+                          value={bmc.customerSegments}
+                          onChange={(e) =>
+                            setBmc((prev) => ({
+                              ...prev,
+                              customerSegments: e.target.value,
+                            }))
+                          }
                           placeholder="고객 세그먼트를 입력하세요"
                           onFocus={() => handleFocus("customerSegments")}
                           onBlur={handleBlur}
@@ -382,6 +550,13 @@ function BMCAnalyzePage() {
                         </h3>
 
                         <textarea
+                          value={bmc.costStructure}
+                          onChange={(e) =>
+                            setBmc((prev) => ({
+                              ...prev,
+                              costStructure: e.target.value,
+                            }))
+                          }
                           placeholder="비용 구조를 입력하세요"
                           onFocus={() => handleFocus("costStructure")}
                           onBlur={handleBlur} 
@@ -398,6 +573,13 @@ function BMCAnalyzePage() {
                           placeholder="수익 구조를 입력하세요"
                           onFocus={() => handleFocus("revenueStreams")}
                           onBlur={handleBlur}
+                          value={bmc.revenueStreams}
+                          onChange={(e) =>
+                            setBmc((prev) => ({
+                              ...prev,
+                              revenueStreams: e.target.value,
+                            }))
+                          }
                           className="w-full h-[70px] resize-none outline-none text-sm text-[#3D4770] leading-6"
                         />
                       </div>
