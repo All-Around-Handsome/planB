@@ -7,10 +7,10 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Download,
   Edit3,
   FileText,
   LayoutTemplate,
+  LogOut,
   Plus,
   Search,
   Settings,
@@ -20,7 +20,12 @@ import {
   X,
 } from "lucide-react";
 
-import { getBmcList, getBmcLimit } from "../api/bmc";
+import {
+  getBmcList,
+  getBmcLimit,
+  getBmcDetail,
+  deleteBmc
+} from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -226,17 +231,52 @@ function MyPageApiTest() {
     }, 2000);
   };
 
-  const handleDelete = (project) => {
-    showToast(`${project.name} 프로젝트가 삭제되었습니다.`);
+  const handleDelete = async (project) => {
+    const confirmDelete = window.confirm(
+      `${project.name} 프로젝트를 삭제하시겠습니까?`
+    );
+    if (!confirmDelete) {
+      return;
+    }
+    try {
+      const response = await deleteBmc(project.id);
+      if(response.success){
+        showToast(
+          `${project.name} 프로젝트가 삭제되었습니다.`
+        );
+        setCurrentPage(1);
+        loadBmcList();
+      }else{
+        showToast("삭제할 수 없습니다.");
+      }
+    } catch(error) {
+      console.error("BMC 삭제 실패", error);
+      showToast("프로젝트 삭제에 실패했습니다.");
+    }
   };
 
-  const handleEdit = (project) => {
-    localStorage.setItem("editing_project_id", project.id);
-    showToast(`${project.name} 프로젝트를 불러옵니다.`);
+  const handleEdit = async (project) => {
+    try {
+      const response = await getBmcDetail(project.id);
 
-    setTimeout(() => {
-      navigate("/idea");
-    }, 500);
+      if (response.success) {
+
+        localStorage.setItem(
+          "editing_project",
+          JSON.stringify(response.data)
+        );
+
+        showToast(`${project.name} 프로젝트를 불러옵니다.`);
+
+        setTimeout(() => {
+          navigate("/idea");
+        }, 500);
+      }
+
+    } catch(error) {
+      console.error("BMC 상세 조회 실패", error);
+      showToast("프로젝트 불러오기에 실패했습니다.");
+    }
   };
 
   const getTypeStyle = (type) => {
@@ -500,12 +540,12 @@ function MyPageApiTest() {
                                 <Edit3 size={16} />
                               </button>
 
-                              {/* 추후 Export API 연결 */}
                               <button
+                                onClick={() => navigate(`/bmc/result/${project.id}`)}
                                 className="text-gray-400 hover:text-blue-600 transition"
                                 title="내보내기"
                               >
-                                <Download size={16} />
+                                <LogOut size={16} />
                               </button>
 
                               <button
