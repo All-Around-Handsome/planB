@@ -127,7 +127,6 @@ function BMCCreatePage() {
         console.log("저장된 BMC ID:", id);
       }
 
-      setIsGenerated(true);
     } catch (error) {
       console.error("BMC 생성 실패", error);
     } finally {
@@ -401,7 +400,7 @@ function BMCCreatePage() {
 
                 <button
                   onClick={handleNext}
-                  disabled={!isGenerated}
+                  disabled={!bmcRecordId}
                   className={`
                     h-11
                     px-7
