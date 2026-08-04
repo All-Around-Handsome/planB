@@ -12,6 +12,7 @@ import BMCAnalyzePage from "../pages/BMCAnalyzePage";
 import BMCResultPage from "../pages/BMCResultPage";
 import BMCAnalyzeResultPage from "../pages/BMCAnalyzeResultPage";
 import MyPage from "../pages/MyPage";
+import BMCEditPage from "../pages/BMCEditPage";
 
 import KakaoCallback from "../pages/oauth/KakaoCallback";
 import GoogleCallback from "../pages/oauth/GoogleCallback";
@@ -118,6 +119,15 @@ function AppRouter() {
         />
 
         <Route
+          path="/bmc/edit/:bmcRecordId"
+          element={
+            <MemberRoute>
+              <BMCEditPage />
+            </MemberRoute>
+          }
+        />
+
+        <Route
           path="/my"
           element={
             <MemberRoute>
@@ -126,7 +136,7 @@ function AppRouter() {
           }
         />
 
-        {/* 테스트용 */}
+        {/* 실전 */}
         <Route
           path="/my/test"
           element={

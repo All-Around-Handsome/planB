@@ -23,8 +23,7 @@ import {
 import {
   getBmcList,
   getBmcLimit,
-  getBmcDetail,
-  deleteBmc
+  deleteBmc,
 } from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
@@ -255,28 +254,8 @@ function MyPageApiTest() {
     }
   };
 
-  const handleEdit = async (project) => {
-    try {
-      const response = await getBmcDetail(project.id);
-
-      if (response.success) {
-
-        localStorage.setItem(
-          "editing_project",
-          JSON.stringify(response.data)
-        );
-
-        showToast(`${project.name} 프로젝트를 불러옵니다.`);
-
-        setTimeout(() => {
-          navigate("/idea");
-        }, 500);
-      }
-
-    } catch(error) {
-      console.error("BMC 상세 조회 실패", error);
-      showToast("프로젝트 불러오기에 실패했습니다.");
-    }
+  const handleEdit = (project) => {
+    navigate(`/bmc/edit/${project.id}`);
   };
 
   const getTypeStyle = (type) => {
