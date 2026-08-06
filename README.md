@@ -1,4 +1,4 @@
-# 이매지니어(Imagineers) - Backend
+# planB - Backend
 
 AI 기반 비즈니스 모델 캔버스(BMC) 생성 서비스의 백엔드입니다.
 
