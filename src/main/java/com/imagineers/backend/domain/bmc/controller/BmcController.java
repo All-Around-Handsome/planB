@@ -143,6 +143,19 @@ public class BmcController {
     }
 
     /**
+     * 경쟁 서비스 탐색 횟수 차감 (S-001, S-002 공통)
+     * 탐색 버튼 클릭 시 호출. 호출하면 탐색 횟수가 1 차감된다.
+     * 주소: POST /api/bmc/check-search
+     */
+    @PostMapping("/check-search")
+    public ApiResponse<LimitCheckResponse> checkSearch(
+            @AuthenticationPrincipal Long userId
+    ) {
+        LimitCheckResponse result = limitService.tryConsumeSearch(userId);
+        return ApiResponse.success(result);
+    }
+
+    /**
      * 오늘 남은 횟수 조회 (차감 없음)
      * 프론트가 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용으로 호출.
      * 주소: GET /api/bmc/limit

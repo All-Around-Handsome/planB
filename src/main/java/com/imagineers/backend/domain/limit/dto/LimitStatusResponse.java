@@ -8,6 +8,8 @@ public record LimitStatusResponse(
         int remainingGeneration,  // 생성 남은 횟수
         int generationLimit,      // 생성 하루 한도
         int remainingAnalysis,    // 분석 남은 횟수
-        int analysisLimit         // 분석 하루 한도
+        int analysisLimit,         // 분석 하루 한도
+        int remainingSearch,      // 탐색 남은 횟수
+        int searchLimit           // 탐색 하루 한도
 ) {
 }

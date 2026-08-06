@@ -36,12 +36,16 @@ public class DailyLimit {
     @Column(name = "analysis_count", nullable = false)
     private int analysisCount = 0;
 
+    @Column(name = "search_count", nullable = false)
+    private int searchCount = 0;
+
     @Builder
     public DailyLimit(User user, LocalDate limitDate) {
         this.user = user;
         this.limitDate = limitDate;
         this.generationCount = 0;
         this.analysisCount = 0;
+        this.searchCount = 0;
     }
 
     // AI 생성 횟수 +1 (L-001)
@@ -52,5 +56,10 @@ public class DailyLimit {
     // 직접 분석 횟수 +1 (L-001)
     public void incrementAnalysisCount() {
         this.analysisCount++;
+    }
+
+    // 경쟁 서비스 탐색 횟수 +1 (S-001, S-002 공통)
+    public void incrementSearchCount() {
+        this.searchCount++;
     }
 }

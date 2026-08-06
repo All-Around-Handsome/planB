@@ -34,6 +34,9 @@ public class LimitService {
     @Value("${limit.daily-analysis}")
     private int dailyAnalysisLimit;
 
+    @Value("${limit.daily-search}")
+    private int dailySearchLimit;
+
     /**
      * AI 생성 횟수 체크 + 증가.
      * BMC 자동생성(G 경로) 직전에 호출한다.
@@ -108,6 +111,23 @@ public class LimitService {
     }
 
     /**
+     * 경쟁 서비스 탐색 가능 여부 확인 + 증가 (S-001, S-002 공통)
+     * 탐색 버튼 클릭 시 호출한다.
+     */
+    public LimitCheckResponse tryConsumeSearch(Long userId) {
+        DailyLimit dailyLimit = getOrCreateTodayLimit(userId);
+        int used = dailyLimit.getSearchCount();
+
+        if (used >= dailySearchLimit) {
+            return new LimitCheckResponse(false, 0, dailySearchLimit);
+        }
+
+        dailyLimit.incrementSearchCount();
+        int remaining = dailySearchLimit - (used + 1);
+        return new LimitCheckResponse(true, remaining, dailySearchLimit);
+    }
+
+    /**
      * 오늘 남은 횟수 조회 (차감 없음!)
      * 프론트가 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용으로 호출한다.
      * 카운트를 건드리지 않고 현재 상태만 읽어서 반환한다.
@@ -127,14 +147,17 @@ public class LimitService {
         // 오늘 기록이 없으면 사용량 0, 있으면 실제 사용량
         int usedGeneration = (dailyLimit != null) ? dailyLimit.getGenerationCount() : 0;
         int usedAnalysis = (dailyLimit != null) ? dailyLimit.getAnalysisCount() : 0;
+        int usedSearch = (dailyLimit != null) ? dailyLimit.getSearchCount() : 0;
 
         // 남은 횟수 = 한도 - 사용량
         int remainingGeneration = dailyGenerationLimit - usedGeneration;
         int remainingAnalysis = dailyAnalysisLimit - usedAnalysis;
+        int remainingSearch = dailySearchLimit - usedSearch;
 
         return new LimitStatusResponse(
                 remainingGeneration, dailyGenerationLimit,
-                remainingAnalysis, dailyAnalysisLimit
+                remainingAnalysis, dailyAnalysisLimit,
+                remainingSearch, dailySearchLimit
         );
     }
 
