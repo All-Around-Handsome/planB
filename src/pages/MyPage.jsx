@@ -67,8 +67,8 @@ function MyPage() {
                 ? <LayoutTemplate size={18} />
                 : <BarChart3 size={18} />,
 
-            // 아이디어 요약
-            name: bmc.ideaText,
+            // 제목: ideaText의 첫 번째 줄
+            name: bmc.ideaText?.split(/\r?\n/)[0]?.trim() || "제목 없음",
 
             // 생성일
             createdAt: bmc.createdAt,
@@ -456,7 +456,7 @@ function MyPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="h-12 bg-[#F8FAFF] border-b border-gray-100 text-xs text-gray-500">
-                        <th className="text-left px-5 font-bold">아이디어 요약</th>
+                        <th className="text-left px-5 font-bold">아이디어 제목</th>
                         <th className="text-left px-3 font-bold">생성일</th>
                         <th className="text-center px-3 font-bold">타당성 점수</th>
                         <th className="text-center px-3 font-bold">타입</th>
@@ -470,14 +470,26 @@ function MyPage() {
                           key={project.id}
                           className="h-[58px] border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30 transition"
                         >
-                          {/* 아이디어 요약 */}
-                          <td className="px-5">
-                            <div className="flex items-center gap-3">
-                              <div className="text-blue-500">{project.icon}</div>
+                          {/* 아이디어 제목 */}
+                          <td className="px-5 max-w-[320px]">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="text-blue-500 shrink-0">
+                                {project.icon}
+                              </div>
 
                               <button
                                 onClick={() => handleEdit(project)}
-                                className="text-sm font-bold text-[#071642] hover:text-blue-600 transition text-left truncate"
+                                className="
+                                  text-sm
+                                  font-bold
+                                  text-[#071642]
+                                  hover:text-blue-600
+                                  transition
+                                  text-left
+                                  truncate
+                                  min-w-0
+                                "
+                                title={project.name}
                               >
                                 {project.name}
                               </button>
