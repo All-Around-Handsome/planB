@@ -286,15 +286,19 @@ function MyPage() {
                       {user.name}
                     </h2>
 
+                    {/* 
                     <span className="px-2 py-1 rounded-md bg-blue-50 text-blue-600 text-xs font-bold">
                       Pro 플랜
                     </span>
+                    */}
                   </div>
 
+                  {/*
                   <p className="text-sm text-gray-500 mb-1">{user.email}</p>
                   <p className="text-xs text-gray-400">
                     마지막 로그인&nbsp;&nbsp; {user.joinedAt}
                   </p>
+                  */}
                 </div>
               </div>
 
