@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart3,
@@ -7,10 +7,10 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Copy,
   Edit3,
   FileText,
-  Heart,
+  LayoutTemplate,
+  LogOut,
   Plus,
   Search,
   Settings,
@@ -19,6 +19,12 @@ import {
   User,
   X,
 } from "lucide-react";
+
+import {
+  getBmcList,
+  getBmcLimit,
+  deleteBmc,
+} from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -29,6 +35,13 @@ function MyPage() {
   const [filter, setFilter] = useState("all");
   const [toastMessage, setToastMessage] = useState("");
   const [isSettingOpen, setIsSettingOpen] = useState(false);
+  
+  const [projects, setProjects] = useState([]);
+
+  const [bmcLimit, setBmcLimit] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const user = {
     name: "가이드님",
@@ -36,108 +49,147 @@ function MyPage() {
     joinedAt: "2024.05.20 14:30",
   };
 
+  const loadBmcList = async () => {
+    console.log("loadBmcList 실행");
+
+    try {
+      const response = await getBmcList();
+
+      if (response.success) {
+
+        const mappedProjects = response.data
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .map((bmc) => ({
+            id: bmc.bmcRecordId,
+
+            icon:
+              bmc.bmcType === "AI_GENERATED"
+                ? <LayoutTemplate size={18} />
+                : <BarChart3 size={18} />,
+
+            // 아이디어 요약
+            name: bmc.ideaText,
+
+            // 생성일
+            createdAt: bmc.createdAt,
+
+            // 타당성 점수
+            score: bmc.validityScore,
+
+            // 타입
+            bmcType:
+              bmc.bmcType === "AI_GENERATED"
+                ? "AI 생성"
+                : "직접 분석",
+
+            bmcTypeCode:
+              bmc.bmcType === "AI_GENERATED"
+                ? "ai"
+                : "direct",
+          }));
+
+        setProjects(mappedProjects);
+      }
+
+    } catch(error) {
+      console.error("BMC 목록 조회 실패", error);
+    }
+  };
+
+
+  useEffect(() => {
+    console.log("MyPageApiTest mounted");
+
+    loadBmcList();
+    loadBmcLimit();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, filter]);
+
+  const aiProjectCount = projects.filter(
+    (project) => project.bmcTypeCode === "ai"
+  ).length;
+
+  const directProjectCount = projects.filter(
+    (project) => project.bmcTypeCode === "direct"
+  ).length;
+
+  const totalAiRemaining =
+    bmcLimit
+      ? (bmcLimit.remainingSearch ?? 0) +
+        (bmcLimit.remainingGeneration ?? 0) +
+        (bmcLimit.remainingAnalysis ?? 0)
+      : 0;
+
   const stats = [
     {
       icon: <FileText size={22} />,
       title: "전체 프로젝트",
-      value: 12,
-      unit: "개",
-      change: "+3",
-      desc: "지난 7일",
-    },
-    {
-      icon: <FileText size={22} />,
-      title: "분석 완료 프로젝트",
-      value: 9,
-      unit: "개",
-      change: "+2",
-      desc: "지난 7일",
-    },
-    {
-      icon: <FileText size={22} />,
-      title: "저장된 BMC",
-      value: 12,
+      value: projects.length,
       unit: "개",
       change: null,
       desc: "",
     },
     {
-      icon: <Heart size={22} />,
-      title: "스크랩 서비스",
-      value: 15,
+      icon: <LayoutTemplate size={22} />,
+      title: "AI 생성 프로젝트",
+      value: aiProjectCount,
       unit: "개",
+      change: null,
+      desc: "",
+    },
+    {
+      icon: <BarChart3 size={22} />,
+      title: "직접 분석 프로젝트",
+      value: directProjectCount,
+      unit: "개",
+      change: null,
+      desc: "",
+    },
+    {
+      icon: <Sparkles size={22} />,
+      title: "AI 남은 사용량",
+      value: totalAiRemaining,
+      unit: "회",
       change: null,
       desc: "",
     },
   ];
 
-  const projects = [
-    {
-      id: 1,
-      icon: <FileText size={18} />,
-      name: "AI 기반 맞춤형 헬스케어 플랫폼",
-      createdAt: "2024.05.20 14:30",
-      updatedAt: "2024.05.20 14:30",
-      status: "분석 완료",
-      statusType: "complete",
-    },
-    {
-      id: 2,
-      icon: <Sparkles size={18} />,
-      name: "마케팅 자동화 서비스",
-      createdAt: "2024.05.20 11:20",
-      updatedAt: "2024.05.20 11:20",
-      status: "분석 완료",
-      statusType: "complete",
-    },
-    {
-      id: 3,
-      icon: <BarChart3 size={18} />,
-      name: "스마트 물류 관리 솔루션",
-      createdAt: "2024.05.19 18:45",
-      updatedAt: "2024.05.19 18:45",
-      status: "분석 중",
-      statusType: "progress",
-    },
-    {
-      id: 4,
-      icon: <Heart size={18} />,
-      name: "시니어 케어 매칭 서비스",
-      createdAt: "2024.05.18 09:10",
-      updatedAt: "2024.05.18 09:10",
-      status: "임시 저장",
-      statusType: "draft",
-    },
-    {
-      id: 5,
-      icon: <FileText size={18} />,
-      name: "스마트 대중교통 플랫폼",
-      createdAt: "2024.05.17 13:50",
-      updatedAt: "2024.05.17 13:50",
-      status: "임시 저장",
-      statusType: "draft",
-    },
-  ];
+  const formatDateTime = (date) => {
+    if (!date) return "-";
 
-  const recentActivities = [
-    {
-      title: "AI 기반 맞춤형 헬스케어...",
-      time: "10분 전",
-    },
-    {
-      title: "마케팅 자동화 서비스",
-      time: "1시간 전",
-    },
-    {
-      title: "스마트 물류 관리 솔루션",
-      time: "3시간 전",
-    },
-  ];
+    const [datePart, timePart] = date.split("T");
 
-  const favoriteBmcs = [
-    "AI 기반 맞춤형 헬스케어 플랫폼",
-    "스마트 물류 관리 솔루션",
-  ];
+    return `${datePart.replaceAll("-", ".")} ${timePart.slice(0, 5)}`;
+  };
+
+  const latestAnalysis = useMemo(() => {
+    return projects
+      .filter(
+        (project) =>
+          project.score !== null &&
+          project.score !== undefined
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt) - new Date(a.createdAt)
+      )[0];
+  }, [projects]);
+
+  const loadBmcLimit = async () => {
+    try {
+      const response = await getBmcLimit();
+
+      if (response.success) {
+        setBmcLimit(response.data);
+      }
+    } catch (error) {
+      console.error("AI 사용량 조회 실패", error);
+    }
+  };
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -147,13 +199,28 @@ function MyPage() {
 
       const matchesFilter =
         filter === "all" ||
-        (filter === "complete" && project.statusType === "complete") ||
-        (filter === "progress" && project.statusType === "progress") ||
-        (filter === "draft" && project.statusType === "draft");
+        (filter === "ai" && project.bmcTypeCode === "ai") ||
+        (filter === "direct" && project.bmcTypeCode === "direct");
 
       return matchesKeyword && matchesFilter;
     });
-  }, [searchKeyword, filter]);
+  }, [projects, searchKeyword, filter]);
+
+  const totalPages = Math.ceil(
+    filteredProjects.length / pageSize
+  );
+
+
+  const paginatedProjects = useMemo(() => {
+    const start =
+      (currentPage - 1) * pageSize;
+
+    return filteredProjects.slice(
+      start,
+      start + pageSize
+    );
+
+  }, [filteredProjects, currentPage]);
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -163,35 +230,42 @@ function MyPage() {
     }, 2000);
   };
 
-  const getStatusStyle = (type) => {
-    if (type === "complete") {
-      return "bg-emerald-50 text-emerald-600";
+  const handleDelete = async (project) => {
+    const confirmDelete = window.confirm(
+      `${project.name} 프로젝트를 삭제하시겠습니까?`
+    );
+    if (!confirmDelete) {
+      return;
     }
-
-    if (type === "progress") {
-      return "bg-blue-50 text-blue-600";
+    try {
+      const response = await deleteBmc(project.id);
+      if(response.success){
+        showToast(
+          `${project.name} 프로젝트가 삭제되었습니다.`
+        );
+        setCurrentPage(1);
+        loadBmcList();
+      }else{
+        showToast("삭제할 수 없습니다.");
+      }
+    } catch(error) {
+      console.error("BMC 삭제 실패", error);
+      showToast("프로젝트 삭제에 실패했습니다.");
     }
-
-    return "bg-gray-100 text-gray-500";
-  };
-
-  const handleCopy = (project) => {
-    navigator.clipboard.writeText(project.name);
-    showToast("프로젝트명이 복사되었습니다.");
-  };
-
-  const handleDelete = (project) => {
-    showToast(`${project.name} 프로젝트가 삭제되었습니다.`);
   };
 
   const handleEdit = (project) => {
-    localStorage.setItem("editing_project_id", project.id);
-    showToast(`${project.name} 프로젝트를 불러옵니다.`);
-
-    setTimeout(() => {
-      navigate("/idea");
-    }, 500);
+    navigate(`/bmc/edit/${project.id}`);
   };
+
+  const getTypeStyle = (type) => {
+    if (type === "ai") {
+      return "bg-blue-50 text-blue-600";
+    }
+
+    return "bg-purple-50 text-purple-600";
+  };
+
 
   return (
     <MainLayout>
@@ -338,10 +412,9 @@ function MyPage() {
                           outline-none
                         "
                       >
-                        <option value="all">전체 상태</option>
-                        <option value="complete">분석 완료</option>
-                        <option value="progress">분석 중</option>
-                        <option value="draft">임시 저장</option>
+                        <option value="all">전체</option>
+                        <option value="ai">AI 생성</option>
+                        <option value="direct">직접 분석</option>
                       </select>
 
                       <ChevronDown
@@ -351,53 +424,27 @@ function MyPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => navigate("/my/test")}
-                      className="
-                        h-10
-                        px-5
-                        rounded-xl
-                        border
-                        border-blue-200
-                        bg-blue-50
-                        text-blue-600
-                        text-sm
-                        font-bold
-                        flex
-                        items-center
-                        gap-2
-                        hover:bg-blue-100
-                        active:scale-[0.98]
-                        transition
-                      "
-                    >
-                      <BarChart3 size={17} />
-                      API 테스트
-                    </button>
-
-                    <button
-                      onClick={() => navigate("/idea")}
-                      className="
-                        h-10
-                        px-5
-                        rounded-xl
-                        bg-blue-600
-                        text-white
-                        text-sm
-                        font-bold
-                        flex
-                        items-center
-                        gap-2
-                        hover:bg-blue-700
-                        active:scale-[0.98]
-                        transition
-                      "
-                    >
-                      <Plus size={17} />
-                      새 프로젝트 만들기
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => navigate("/idea")}
+                    className="
+                      h-10
+                      px-5
+                      rounded-xl
+                      bg-blue-600
+                      text-white
+                      text-sm
+                      font-bold
+                      flex
+                      items-center
+                      gap-2
+                      hover:bg-blue-700
+                      active:scale-[0.98]
+                      transition
+                    "
+                  >
+                    <Plus size={17} />
+                    새 프로젝트 만들기
+                  </button>
                 </div>
 
                 {/* Table */}
@@ -405,42 +452,48 @@ function MyPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="h-12 bg-[#F8FAFF] border-b border-gray-100 text-xs text-gray-500">
-                        <th className="text-left px-5 font-bold">프로젝트명</th>
+                        <th className="text-left px-5 font-bold">아이디어 요약</th>
                         <th className="text-left px-3 font-bold">생성일</th>
-                        <th className="text-left px-3 font-bold">최종 수정일</th>
-                        <th className="text-left px-3 font-bold">상태</th>
+                        <th className="text-center px-3 font-bold">타당성 점수</th>
+                        <th className="text-center px-3 font-bold">타입</th>
                         <th className="text-center px-3 font-bold">작업</th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      {filteredProjects.map((project) => (
+                      {paginatedProjects.map((project) => (
                         <tr
                           key={project.id}
                           className="h-[58px] border-b border-gray-100 last:border-b-0 hover:bg-blue-50/30 transition"
                         >
+                          {/* 아이디어 요약 */}
                           <td className="px-5">
                             <div className="flex items-center gap-3">
                               <div className="text-blue-500">{project.icon}</div>
 
                               <button
                                 onClick={() => handleEdit(project)}
-                                className="text-sm font-bold text-[#071642] hover:text-blue-600 transition text-left"
+                                className="text-sm font-bold text-[#071642] hover:text-blue-600 transition text-left truncate"
                               >
                                 {project.name}
                               </button>
                             </div>
                           </td>
 
+                          {/* 생성일 */}
                           <td className="px-3 text-xs font-medium text-[#3D4770]">
-                            {project.createdAt}
+                            {formatDateTime(project.createdAt)}
                           </td>
 
-                          <td className="px-3 text-xs font-medium text-[#3D4770]">
-                            {project.updatedAt}
+                          {/* 타당성 점수 */}
+                          <td className="px-3 text-center">
+                            <span className="font-bold text-[#071642]">
+                              {project.score ?? "-"}
+                            </span>
                           </td>
 
-                          <td className="px-3">
+                          {/* 타입 */}
+                          <td className="px-3 text-center">
                             <span
                               className={`
                                 px-3
@@ -448,34 +501,41 @@ function MyPage() {
                                 rounded-full
                                 text-xs
                                 font-bold
-                                ${getStatusStyle(project.statusType)}
+                                ${getTypeStyle(project.bmcTypeCode)}
                               `}
                             >
-                              {project.status}
+                              {project.bmcType}
                             </span>
                           </td>
 
+                          {/* 작업 */}
                           <td className="px-3">
-                            <div className="flex items-center justify-center gap-3 text-gray-400">
+                            <div className="flex items-center justify-center gap-3">
                               <button
                                 onClick={() => handleEdit(project)}
-                                className="hover:text-blue-600 transition"
+                                className="text-gray-400 hover:text-blue-600 transition"
                                 title="편집"
                               >
                                 <Edit3 size={16} />
                               </button>
 
                               <button
-                                onClick={() => handleCopy(project)}
-                                className="hover:text-blue-600 transition"
-                                title="복사"
+                                onClick={() =>
+                                  navigate(
+                                    project.bmcTypeCode === "ai"
+                                      ? `/bmc/result/${project.id}`
+                                      : `/bmc/analyze/result/${project.id}`
+                                  )
+                                }
+                                className="text-gray-400 hover:text-blue-600 transition"
+                                title="내보내기"
                               >
-                                <Copy size={16} />
+                                <LogOut size={16} />
                               </button>
 
                               <button
                                 onClick={() => handleDelete(project)}
-                                className="hover:text-red-500 transition"
+                                className="text-gray-400 hover:text-red-500 transition"
                                 title="삭제"
                               >
                                 <Trash2 size={16} />
@@ -496,23 +556,33 @@ function MyPage() {
 
                 {/* Pagination */}
                 <div className="flex items-center justify-center gap-2 mt-5">
-                  <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                  >
                     <ChevronLeft size={16} />
                   </button>
 
-                  <button className="w-8 h-8 rounded-lg bg-blue-600 text-white text-sm font-bold">
-                    1
-                  </button>
+                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-sm font-bold ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
 
-                  <button className="w-8 h-8 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100">
-                    2
-                  </button>
-
-                  <button className="w-8 h-8 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-100">
-                    3
-                  </button>
-
-                  <button className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100">
+                  <button
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                  >
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -523,34 +593,53 @@ function MyPage() {
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-base font-extrabold text-gray-900">
-                      최근 활동
+                      최근 분석 이력
                     </h3>
-
-                    <button className="text-xs text-gray-400 font-bold hover:text-blue-600 transition">
-                      더보기
-                    </button>
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    {recentActivities.map((item) => (
-                      <div
-                        key={item.title}
-                        className="flex items-center gap-3"
-                      >
-                        <FileText size={16} className="text-blue-500 shrink-0" />
+                    {latestAnalysis ? (
+                      <div className="rounded-xl bg-blue-50/50 p-4">
 
-                        <p className="flex-1 text-xs font-medium text-[#3D4770] truncate">
-                          {item.title}
-                        </p>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="text-blue-500">
+                            {latestAnalysis.icon}
+                          </div>
 
-                        <span className="text-[11px] text-gray-400 shrink-0">
-                          {item.time}
-                        </span>
+                          <p className="flex-1 text-sm font-bold text-[#071642] truncate">
+                            {latestAnalysis.name}
+                          </p>
+                        </div>
+
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">
+                            타당성 점수
+                          </span>
+
+                          <span className="text-xl font-extrabold text-blue-600">
+                            {latestAnalysis.score}점
+                          </span>
+                        </div>
+
                       </div>
-                    ))}
+                    ) : (
+                      <div className="h-[100px] flex items-center justify-center text-sm text-gray-400">
+                        아직 분석 이력이 없습니다.
+                      </div>
+                    )}
                   </div>
 
+
                   <button
+                    onClick={() =>
+                      navigate(
+                        latestAnalysis.bmcTypeCode === "ai"
+                          ? `/bmc/result/${latestAnalysis.id}`
+                          : `/bmc/analyze/result/${latestAnalysis.id}`
+                      )
+                    }
+                    disabled={!latestAnalysis}
                     className="
                       w-full
                       h-10
@@ -563,59 +652,61 @@ function MyPage() {
                       font-bold
                       hover:bg-blue-50
                       transition
+                      disabled:opacity-40
                     "
                   >
-                    전체 활동 보기
+                    분석 결과 보기
                   </button>
                 </div>
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Sparkles size={18} className="text-blue-500" />
+
                     <h3 className="text-base font-extrabold text-gray-900">
-                      즐겨찾기 BMC
+                      AI 사용 현황
                     </h3>
-
-                    <button className="text-xs text-gray-400 font-bold hover:text-blue-600 transition">
-                      더보기
-                    </button>
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    {favoriteBmcs.map((item) => (
-                      <button
-                        key={item}
-                        onClick={() => navigate("/bmc/result")}
-                        className="flex items-center gap-3 text-left group"
-                      >
-                        <Heart
-                          size={16}
-                          className="text-gray-400 shrink-0 group-hover:text-blue-500"
-                        />
+                  <div className="space-y-5">
 
-                        <p className="text-xs font-medium text-[#3D4770] group-hover:text-blue-600 transition truncate">
-                          {item}
-                        </p>
-                      </button>
-                    ))}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        경쟁탐색
+                      </span>
+
+                      <span className="font-bold text-gray-900">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingSearch} / ${bmcLimit.searchLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        BMC 생성
+                      </span>
+
+                      <span className="font-bold text-blue-600">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingGeneration} / ${bmcLimit.generationLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        BMC 분석
+                      </span>
+
+                      <span className="font-bold text-purple-600">
+                        {bmcLimit
+                          ? `${bmcLimit.remainingAnalysis} / ${bmcLimit.analysisLimit}회`
+                          : "- / -"}
+                      </span>
+                    </div>
+
                   </div>
-
-                  <button
-                    className="
-                      w-full
-                      h-10
-                      mt-5
-                      rounded-xl
-                      border
-                      border-blue-100
-                      text-blue-600
-                      text-sm
-                      font-bold
-                      hover:bg-blue-50
-                      transition
-                    "
-                  >
-                    전체 즐겨찾기 보기
-                  </button>
                 </div>
               </aside>
             </div>
