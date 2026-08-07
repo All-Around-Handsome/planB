@@ -471,7 +471,7 @@ function BMCEditPage() {
 
   // 뒤로가기
   const handleBack = () => {
-    navigate("/my/test");
+    navigate("/my");
   };
 
   // 로딩
