@@ -65,7 +65,14 @@ function BMCCreatePage() {
       // 1. 생성 횟수 차감
       await checkGeneration();
 
-      // 2. AI 생성
+      // 2. 차감된 최신 사용량 조회
+      const updatedLimit = await getBmcLimit();
+
+      if (updatedLimit.success) {
+        setBmcLimit(updatedLimit.data);
+      }
+
+      // 3. AI 생성
       const aiResult = await generateBmc({
         idea: project.ideaContent,
       });
@@ -73,7 +80,7 @@ function BMCCreatePage() {
       // 화면에 저장
       setGeneratedBmc(aiResult);
 
-      // 3. 생성 결과 저장
+      // 4. 생성 결과 저장
       const saveResult = await saveGeneratedBmc({
         ideaText: project.ideaContent,
         stage: "IDEA",
