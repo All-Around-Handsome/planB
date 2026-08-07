@@ -19,13 +19,13 @@ const guideSteps = [
     step: "STEP 1",
     title: "아이디어 입력",
     desc: "사업 아이디어의 제목과 핵심 내용을 입력합니다.",
-    image: "/Guide_01_Idea.png",
+    image: "/Guide/PlanB_01_Idea_Input.png",
   },
   {
     step: "STEP 2",
     title: "경쟁 서비스 탐색",
     desc: "입력한 아이디어와 유사한 경쟁 서비스를 탐색합니다.",
-    image: "/Guide_02_Explore.png",
+    image: "/Guide/PlanB_02_Competitor_Explore.png",
   },
   {
     step: "STEP 3",
@@ -241,7 +241,7 @@ function MainPage() {
           {/* Slider */}
           <div className="relative overflow-hidden rounded-[36px] border border-gray-100 bg-[#F8FAFF] shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
 
-            <div className="grid grid-cols-[1.15fr_0.85fr] min-h-[620px]">
+            <div className="grid grid-cols-[1.15fr_0.85fr] min-h-[650px]">
 
               {/* Left */}
               <div className="relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F4F7FF] to-[#DCE6FF] p-14">
@@ -268,24 +268,24 @@ function MainPage() {
 
                 {/* Image */}
                 <div
-                  key={currentStep}
                   className="
-                    relative z-10
-                    w-full max-w-[760px]
-                    animate-[slideIn_0.45s_ease]
+                    rounded-[30px]
+                    bg-white/70
+                    p-4
+                    backdrop-blur
+                    shadow-[0_18px_50px_rgba(15,23,42,0.12)]
                   "
                 >
-                  <div className="rounded-[30px] bg-white/70 p-4 backdrop-blur shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-
+                  <div className="overflow-hidden rounded-[22px]">
                     <img
                       src={step.image}
                       alt={step.title}
                       className="
+                        block
                         w-full
-                        h-[420px]
-                        object-cover
-                        object-top
-                        rounded-[22px]
+                        h-auto
+                        max-h-[520px]
+                        object-contain
                       "
                     />
                   </div>
