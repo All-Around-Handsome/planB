@@ -348,7 +348,7 @@ function IdeaPage() {
                   <div className="text-sm font-semibold text-gray-500">
                     AI 사용 가능{" "}
                     <span className="text-blue-600">
-                      탐색 {bmcLimit.remainingExplore}/{bmcLimit.exploreLimit}
+                      탐색 {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}
                       {" · "}
                       생성 {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}
                       {" · "}

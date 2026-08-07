@@ -49,6 +49,13 @@ export async function getBmcLimit() {
   });
 }
 
+// 경쟁 탐색 횟수 차감
+export async function checkSearch() {
+  return request("/api/bmc/check-search", {
+    method: "POST",
+  });
+}
+
 // 생성 횟수 차감
 export async function checkGeneration() {
   return request("/api/bmc/check-generation", {

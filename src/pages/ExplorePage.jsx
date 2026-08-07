@@ -163,7 +163,7 @@ function ExplorePage() {
                         <div className="text-sm font-semibold text-gray-500">
                           오늘 탐색 가능 횟수{" "}
                           <span className="text-blue-600">
-                            {bmcLimit.remainingExplore}/{bmcLimit.exploreLimit}
+                            {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}
                           </span>
                         </div>
                       )}
