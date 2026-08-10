@@ -90,6 +90,7 @@ function BMCCreatePage() {
       const aiResult = await generateBmc({
         idea: project.ideaContent,
         stage: stageMap[project.selectedStep],
+        useCompetitorContext: project.searchOption === "withSearch",
       });
 
       // 화면에 저장
