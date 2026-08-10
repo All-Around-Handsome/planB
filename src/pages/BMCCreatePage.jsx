@@ -58,6 +58,20 @@ function BMCCreatePage() {
     fetchBmcLimit();
   }, []);
 
+  const stageMap = {
+    idea: "아이디어",
+    validate: "검증",
+    launch: "초기런칭",
+    growth: "성장",
+  };
+
+  const backendStageMap = {
+    idea: "IDEA",
+    validate: "VALIDATION",
+    launch: "LAUNCH",
+    growth: "GROWTH",
+  };
+
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
@@ -75,6 +89,7 @@ function BMCCreatePage() {
       // 3. AI 생성
       const aiResult = await generateBmc({
         idea: project.ideaContent,
+        stage: stageMap[project.selectedStep],
       });
 
       // 화면에 저장
@@ -83,7 +98,7 @@ function BMCCreatePage() {
       // 4. 생성 결과 저장
       const saveResult = await saveGeneratedBmc({
         ideaText: project.ideaContent,
-        stage: "IDEA",
+        stage: backendStageMap[project.selectedStep],
         bmcType: "AI_GENERATED",
         items: [
           {
