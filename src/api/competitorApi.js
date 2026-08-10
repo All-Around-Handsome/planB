@@ -1,6 +1,6 @@
 // true: Mock 데이터 사용 (AI 서버 없이 화면 테스트)
 // false: 실제 AI API 연동 데이터 사용
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 
 // Mock 응답 데이터
