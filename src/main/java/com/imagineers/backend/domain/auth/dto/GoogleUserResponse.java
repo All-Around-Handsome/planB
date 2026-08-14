@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public record GoogleUserResponse(
         String sub,    // 구글 고유 사용자 ID → 우리 DB의 oauth_id로 사용
         String name,   // 이름
-        String email   // 이메일 (구글은 기본으로 줌!)
+        String email,   // 이메일 (구글은 기본으로 줌!)
+        String picture   // ✨ 프로필 사진 URL (구글은 picture라는 이름으로 줌)
 ) {
 }

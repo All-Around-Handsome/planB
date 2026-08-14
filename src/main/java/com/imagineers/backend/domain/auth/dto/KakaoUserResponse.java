@@ -20,7 +20,8 @@ public record KakaoUserResponse(
         // 또 그 안의 profile 부분
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Profile(
-                String nickname  // 닉네임 → 우리 DB의 name으로 사용
+                String nickname,  // 닉네임 → 우리 DB의 name으로 사용
+                @JsonProperty("profile_image_url") String profileImageUrl  // ✨ 프로필 사진
         ) {
         }
     }
@@ -39,5 +40,13 @@ public record KakaoUserResponse(
             return null;
         }
         return kakaoAccount.email();  // 동의 안 했으면 null
+    }
+
+    // 프로필 사진 URL을 안전하게 꺼내는 도우미 메서드
+    public String getProfileImageUrl() {
+        if (kakaoAccount == null || kakaoAccount.profile() == null) {
+            return null;  // 없으면 null
+        }
+        return kakaoAccount.profile().profileImageUrl();
     }
 }

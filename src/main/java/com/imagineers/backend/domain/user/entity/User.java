@@ -38,6 +38,9 @@ public class User {
     @Column(unique = true, length = 255)
     private String email;
 
+    @Column(name = "profile_image_url", columnDefinition = "TEXT")
+    private String profileImageUrl;
+
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
@@ -51,15 +54,23 @@ public class User {
 
     @Builder
     public User(OauthProvider oauthProvider, String oauthId,
-                String name, String email) {
+                String name, String email, String profileImageUrl) {
         this.oauthProvider = oauthProvider;
         this.oauthId = oauthId;
         this.name = name;
         this.email = email;
+        this.profileImageUrl = profileImageUrl;
     }
 
     // 로그인 시 토큰 저장, 로그아웃 시 NULL
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    // 로그인할 때마다 이름/프로필 사진을 최신으로 갱신
+    // (사용자가 카카오·구글에서 프로필을 바꾸면 우리 쪽도 따라 바뀜)
+    public void updateProfile(String name, String profileImageUrl) {
+        if (name != null) this.name = name;
+        if (profileImageUrl != null) this.profileImageUrl = profileImageUrl;
     }
 }

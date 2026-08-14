@@ -50,6 +50,10 @@ public class AuthService {
                 .findByOauthProviderAndOauthId(OauthProvider.KAKAO, oauthId)
                 .orElseGet(() -> registerNewUser(userInfo, oauthId));
 
+        // ✨ 추가: 로그인할 때마다 이름/프로필 사진을 최신으로 갱신
+        //    (기존 회원도 프로필이 채워지고, 카카오에서 프로필을 바꾸면 따라 반영됨)
+        user.updateProfile(userInfo.getNickname(), userInfo.getProfileImageUrl());
+
         // 5. 우리 JWT 발급 (A-012) - 지난주 만든 JwtTokenProvider 사용!
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
@@ -82,6 +86,9 @@ public class AuthService {
         User user = userRepository
                 .findByOauthProviderAndOauthId(OauthProvider.GOOGLE, oauthId)
                 .orElseGet(() -> registerNewGoogleUser(userInfo, oauthId));
+
+        // ✨ 추가: 로그인할 때마다 이름/프로필 사진을 최신으로 갱신
+        user.updateProfile(userInfo.name(), userInfo.picture());
 
         // 5. 우리 JWT 발급
         String accessToken = jwtTokenProvider.createAccessToken(user.getId());
@@ -119,6 +126,7 @@ public class AuthService {
                 .oauthId(oauthId)
                 .name(userInfo.name())     // 구글은 바로 꺼낼 수 있음
                 .email(userInfo.email())   // 구글은 이메일을 기본으로 줌
+                .profileImageUrl(userInfo.picture())
                 .build();
         return userRepository.save(newUser);
     }
@@ -132,6 +140,7 @@ public class AuthService {
                 .oauthId(oauthId)
                 .name(userInfo.getNickname())  // 도우미 메서드로 안전하게 꺼냄
                 .email(userInfo.getEmail())    // 없으면 null로 저장됨
+                .profileImageUrl(userInfo.getProfileImageUrl())
                 .build();
         return userRepository.save(newUser);
     }
