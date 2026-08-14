@@ -59,7 +59,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-## 1. 인증 (로그인 / 로그아웃)
+## 1. 인증 / 사용자 정보
 
 ### 1-1. 카카오 로그인
 
@@ -145,6 +145,38 @@ Authorization: Bearer {accessToken}
   "error": null
 }
 ```
+
+---
+
+### 1-4. 내 프로필 조회
+
+| 항목 | 내용 |
+|------|------|
+| 메서드 | `GET` |
+| 주소 | `/api/users/me` |
+| 인증 | **필요** |
+
+로그인한 사용자의 이름과 프로필 사진을 반환합니다. 헤더·마이페이지 표시용.
+
+**요청 Body**: 없음
+
+**응답 (성공)**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "name": "정우성",
+    "profileImageUrl": "https://k.kakaocdn.net/..."
+  },
+  "error": null
+}
+```
+
+> **이름·프로필 사진**은 카카오·구글 모두 제공됩니다.
+> 로그인할 때마다 소셜 계정의 최신 정보로 갱신됩니다.
+> 프로필 사진이 없는 경우 `profileImageUrl`이 `null`일 수 있으니, 기본 이미지 처리를 권장합니다.
+> **이메일은 응답에 포함되지 않습니다.** (카카오는 비즈니스 앱 인증 전 이메일을 제공하지 않아, 팀 결정에 따라 제외)
 
 ---
 
@@ -590,6 +622,7 @@ BMC 하나의 **전체 내용**을 반환합니다. 아이디어 + 9개 항목 +
 | 카카오 로그인 | POST | `/api/auth/kakao` | - |
 | 구글 로그인 | POST | `/api/auth/google` | - |
 | 로그아웃 | POST | `/api/auth/logout` | ✅ |
+| 내 프로필 조회 | GET | `/api/users/me` | ✅ |
 | 남은 횟수 조회 (차감 X) | GET | `/api/bmc/limit` | ✅ |
 | 생성 횟수 차감 | POST | `/api/bmc/check-generation` | ✅ |
 | 분석 횟수 차감 | POST | `/api/bmc/check-analysis` | ✅ |
