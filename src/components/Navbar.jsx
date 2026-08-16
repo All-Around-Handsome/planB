@@ -97,7 +97,7 @@ function Navbar() {
                 />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                  {profile?.name?.charAt(0) || "B"}
+                  {profile?.name?.charAt(0) || "U"}
                 </div>
               )}
 
