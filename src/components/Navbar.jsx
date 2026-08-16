@@ -1,11 +1,36 @@
 import axios from "axios";
 
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useLogin } from "../contexts/LoginContext.jsx";
+import { getProfile } from "../api/bmc";
+
 
 function Navbar() {
 
   const { isLogin, logout } = useLogin();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (!isLogin) {
+      setProfile(null);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const result = await getProfile();
+
+        if (result?.success) {
+          setProfile(result.data);
+        }
+      } catch (error) {
+        console.error("프로필 조회 실패:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [isLogin]);
 
   const handleLogout = async () => {
     try {
@@ -64,11 +89,21 @@ function Navbar() {
             </Link>
           ) : (
             <>
-              <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                B
-              </div>
+              {profile?.profileImageUrl ? (
+                <img
+                  src={profile.profileImageUrl}
+                  alt="프로필"
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+                  {profile?.name?.charAt(0) || "B"}
+                </div>
+              )}
 
-              <span className="text-gray-700 text-lg">가이드님</span>
+              <span className="text-gray-700 text-lg">
+                {profile?.name ? `${profile.name}님` : "사용자님"}
+              </span>
 
               <div className="w-px h-5 bg-gray-300" />
 

@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart3,
-  Bell,
-  CalendarDays,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +19,7 @@ import {
 } from "lucide-react";
 
 import {
+  getProfile,
   getBmcList,
   getBmcLimit,
   deleteBmc,
@@ -43,10 +42,18 @@ function MyPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const user = {
-    name: "가이드님",
-    email: "guide@example.com",
-    joinedAt: "2024.05.20 14:30",
+  const [user, setUser] = useState(null);
+
+  const loadProfile = async () => {
+    try {
+      const response = await getProfile();
+
+      if (response.success) {
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error("프로필 조회 실패", error);
+    }
   };
 
   const loadBmcList = async () => {
@@ -98,8 +105,9 @@ function MyPage() {
 
 
   useEffect(() => {
-    console.log("MyPageApiTest mounted");
+    console.log("MyPage mounted");
 
+    loadProfile();
     loadBmcList();
     loadBmcLimit();
   }, []);
@@ -276,14 +284,22 @@ function MyPage() {
             {/* Profile Header */}
             <section className="flex items-center justify-between mb-7">
               <div className="flex items-center gap-5">
-                <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-[0_10px_24px_rgba(37,99,235,0.25)]">
-                  G
+                <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-[0_10px_24px_rgba(37,99,235,0.25)] overflow-hidden">
+                  {user?.profileImageUrl ? (
+                    <img
+                      src={user.profileImageUrl}
+                      alt="프로필"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    user?.name?.charAt(0) || "U"
+                  )}
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-extrabold text-gray-900">
-                      {user.name}
+                      {user?.name || "사용자"}
                     </h2>
 
                     {/* 
@@ -648,13 +664,15 @@ function MyPage() {
 
 
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      if (!latestAnalysis) return;
+
                       navigate(
                         latestAnalysis.bmcTypeCode === "ai"
                           ? `/bmc/result/${latestAnalysis.id}`
                           : `/bmc/analyze/result/${latestAnalysis.id}`
-                      )
-                    }
+                      );
+                    }}
                     disabled={!latestAnalysis}
                     className="
                       w-full
@@ -669,6 +687,7 @@ function MyPage() {
                       hover:bg-blue-50
                       transition
                       disabled:opacity-40
+                      disabled:cursor-not-allowed
                     "
                   >
                     분석 결과 보기
@@ -749,60 +768,25 @@ function MyPage() {
 
             <div className="flex flex-col gap-4">
               <div className="rounded-2xl border border-gray-200 p-5 flex items-center gap-4">
-                <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <User size={22} />
+                <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center overflow-hidden">
+                  {user?.profileImageUrl ? (
+                    <img
+                      src={user.profileImageUrl}
+                      alt="프로필"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User size={22} />
+                  )}
                 </div>
 
                 <div>
-                  <p className="font-bold text-gray-900">{user.name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <p className="font-bold text-gray-900">
+                    {user?.name || "사용자"}
+                  </p>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Bell size={18} className="text-blue-500" />
-                  <h4 className="font-bold text-gray-900">알림 설정</h4>
-                </div>
-
-                <p className="text-sm text-gray-500 leading-6">
-                  프로젝트 분석 완료, BMC 저장 알림 등의 설정 영역입니다.
-                  실제 설정 저장은 백엔드 연동 후 연결하면 됩니다.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <CalendarDays size={18} className="text-blue-500" />
-                  <h4 className="font-bold text-gray-900">가입 정보</h4>
-                </div>
-
-                <p className="text-sm text-gray-500">
-                  가입일: {user.joinedAt}
-                </p>
               </div>
             </div>
-
-            <button
-              onClick={() => {
-                setIsSettingOpen(false);
-                showToast("계정 설정이 저장되었습니다.");
-              }}
-              className="
-                w-full
-                h-12
-                mt-6
-                rounded-xl
-                bg-blue-600
-                text-white
-                font-bold
-                hover:bg-blue-700
-                active:scale-[0.98]
-                transition
-              "
-            >
-              저장하기
-            </button>
           </div>
         </div>
       )}

@@ -40,6 +40,13 @@ async function request(url, options = {}) {
   return result;
 }
 
+// 프로필 조회
+// GET /api/users/me
+export async function getProfile() {
+  return request("/api/users/me", {
+    method: "GET",
+  });
+}
 
 // 사용 횟수 조회
 // GET /api/bmc/limit
