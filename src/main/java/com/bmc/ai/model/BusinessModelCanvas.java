@@ -1,12 +1,14 @@
 package com.bmc.ai.model;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * BMC 9항목 (기능명세서 G-001).
  * LangChain4j AiServices 가 이 record 의 JSON 스키마를 만들어 Claude 응답을 자동 파싱한다.
  */
 public record BusinessModelCanvas(
-        String valueProposition,      // ① 가치 제안
-        String customerSegments,      // ② 고객 세그먼트
+        @NotBlank String valueProposition, // ① 가치 제안 (분석 요청 필수)
+        @NotBlank String customerSegments, // ② 고객 세그먼트 (분석 요청 필수)
         String revenueStreams,        // ③ 수익 구조
         String costStructure,         // ④ 비용 구조
         String keyPartners,           // ⑤ 핵심 파트너
