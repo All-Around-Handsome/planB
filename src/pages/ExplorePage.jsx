@@ -1,100 +1,44 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  ShieldCheck,
-  Sparkles,
-  ArrowRight,
-  RotateCcw,
-  CheckCircle2,
-  ThumbsUp,
-  TrendingUp,
-  Lightbulb,
-} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, RotateCcw, Search } from "lucide-react";
 
 import { getBmcLimit } from "../api/bmc";
+import { searchCompetitors } from "../api/competitorApi";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
-import ProjectNav from "../components/ProjectNav";
-import ExploreLoading from "../components/ExploreLoading";
+import AILoading from "../components/AILoading";
 import CompetitorListPanel from "../components/CompetitorListPanel";
 import BMCSelectModal from "../components/BMCSelectModal";
 
-import { getProjectData } from "../utils/projectStorage";
-
-import { searchCompetitors } from "../api/competitorApi";
+import { getProjectData, saveProjectData } from "../utils/projectStorage";
 
 function ExplorePage() {
   const navigate = useNavigate();
 
-  const [project, setProject] = useState({
-    ideaTitle: "",
-    ideaContent: "",
-    selectedStep: "idea",
-    searchOption: "withSearch",
-    exploreResult: null,
-  });
-
-  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
-  const [bmcLimit, setBmcLimit] = useState(null);
-
-  useEffect(() => {
-    const savedProject = getProjectData();
-
-    if (savedProject) {
-      setProject(savedProject);
-    }
-
-    async function fetchBmcLimit() {
-      try {
-        const response = await getBmcLimit();
-
-        if (response.success) {
-          setBmcLimit(response.data);
-        }
-      } catch (error) {
-        console.error("사용 횟수 조회 실패", error);
-      }
-    }
-
-    fetchBmcLimit();
-  }, []);
-
-  const [isSearching, setIsSearching] = useState(false);
-
-  const [competitors, setCompetitors] = useState([]);
-  const [error, setError] = useState("");
-
-  const [hasExploreResult, setHasExploreResult] = useState(
-    project.exploreResult !== null
+  const [project] = useState(() => getProjectData());
+  const [competitors, setCompetitors] = useState(
+    () => project?.exploreResult ?? null
   );
 
+  const [bmcLimit, setBmcLimit] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState("");
+  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
   const [isListOpen, setIsListOpen] = useState(false);
 
-  const insights = [
-    {
-      icon: <ThumbsUp size={34} strokeWidth={1.8} />,
-      title: "AI가 도출한 시장 기회",
-      desc: "현재 프로젝트 아이디어를 기준으로 시장 기회 요약이 표시됩니다.",
-    },
-    {
-      icon: <TrendingUp size={34} strokeWidth={1.8} />,
-      title: "AI가 도출한 핵심 니즈",
-      desc: "유사 서비스 분석을 바탕으로 고객 니즈 요약이 표시됩니다.",
-    },
-    {
-      icon: <Lightbulb size={34} strokeWidth={1.8} />,
-      title: "AI가 도출한 차별화 방향",
-      desc: "경쟁 서비스와 비교한 차별화 전략이 표시됩니다.",
-    },
-  ];
+  useEffect(() => {
+    getBmcLimit()
+      .then((response) => {
+        if (response?.success) {
+          setBmcLimit(response.data);
+        }
+      })
+      .catch((error) => console.error("사용 횟수 조회 실패", error));
+  }, []);
 
-  const similarServices = competitors;
-
-  const previewServices = similarServices.slice(0, 3);
-  const hiddenServiceCount =
-    similarServices.length - previewServices.length;
+  const hasIdea = !!project?.ideaContent?.trim();
+  const noneLeft = bmcLimit?.remainingSearch === 0;
 
   const handleExplore = async () => {
     setIsSearching(true);
@@ -102,23 +46,27 @@ function ExplorePage() {
 
     try {
       const result = await searchCompetitors(project.ideaContent);
+      const found = result.competitors || [];
 
-      setCompetitors(result.competitors || []);
+      setCompetitors(found);
 
-      setTimeout(() => {
-        setIsSearching(false);
-        setHasExploreResult(true);
-      }, 3000);
-
+      // 다시 들어와도 횟수를 또 쓰지 않도록 결과를 남긴다
+      saveProjectData({ ...project, exploreResult: found });
     } catch (e) {
       console.error(e);
-      setError("경쟁 서비스 분석에 실패했습니다.");
+
+      if (e.status === 429) {
+        setBmcLimit((prev) => prev && { ...prev, remainingSearch: 0 });
+      }
+
+      setError(
+        e.status === 429
+          ? "오늘 탐색 횟수를 모두 사용했어요."
+          : "탐색하지 못했어요. 잠시 후 다시 시도해 주세요."
+      );
+    } finally {
       setIsSearching(false);
     }
-  };
-
-  const handlePrev = () => {
-    navigate("/idea");
   };
 
   return (
@@ -127,371 +75,120 @@ function ExplorePage() {
         <div className="w-full max-w-[1440px] flex">
           <Sidebar activeStep="explore" />
 
-          <ProjectNav />
-
-          <main className="flex-1 flex flex-col self-stretch">
-            {/* 상단 헤더: IdeaPage의 ideaTitle이 이어지는 영역 */}
+          <main className="flex-1 min-w-0 flex flex-col self-stretch">
             <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {project.ideaTitle || "아이디어 제목 입력"}
+              <h1 className="text-2xl font-bold text-gray-900 truncate">
+                {project?.ideaTitle || "경쟁 탐색"}
               </h1>
             </header>
 
-            <div className="flex-1 px-12 pt-8 pb-8">
-              <div className="max-w-[1120px] h-full flex flex-col">
-                {/* 1. 현재 프로젝트 아이디어 */}
-                <section className="mb-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">
-                    1. 현재 프로젝트 아이디어
-                  </h2>
+            <div className="flex-1 px-12 py-8">
+              <div className="max-w-[1120px] flex flex-col gap-6">
+                {hasIdea && (
+                  <p className="rounded-2xl bg-[#F8FAFF] p-6 text-[#071642] leading-7 whitespace-pre-line">
+                    {project.ideaContent}
+                  </p>
+                )}
 
-                  <div className="rounded-2xl border-2 border-blue-400 bg-white p-6 shadow-sm">
-                    <p className="text-base font-medium text-[#071642] leading-7 whitespace-pre-line">
-                      {project.ideaContent || "입력된 아이디어 내용이 없습니다."}
-                    </p>
-                  </div>
-                </section>
-
-                {!hasExploreResult ? (
-                  <section className="flex-1 flex flex-col">
+                {competitors ? (
+                  <section>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-bold text-gray-900">
-                        경쟁 서비스 탐색
+                        유사 서비스 {competitors.length}개
                       </h2>
 
-                      {bmcLimit && (
-                        <div className="text-sm font-semibold text-gray-500">
-                          오늘 탐색 가능 횟수{" "}
-                          <span className="text-blue-600">
-                            {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}
-                          </span>
-                        </div>
+                      {competitors.length > 0 && (
+                        <button
+                          onClick={() => setIsListOpen(true)}
+                          className="text-sm font-bold text-blue-600 hover:underline"
+                        >
+                          자세히 보기
+                        </button>
                       )}
                     </div>
 
-                    <div
-                      className="
-                        flex-1
-                        min-h-[360px]
-                        rounded-2xl
-                        border
-                        border-gray-200
-                        bg-[#F8FAFF]
-                        px-10
-                        py-14
-                        text-center
-                        flex
-                        flex-col
-                        items-center
-                        justify-center
-                      "
-                    >
-                      {isSearching ? (
-                        <ExploreLoading
-                          duration={3000}
-                          onComplete={() => {
-                            setIsSearching(false);
-                            setHasExploreResult(true);
-                          }}
-                        />
-                      ) : (
-                        <>
-                          <div
-                            className="
-                              w-20 h-20
-                              rounded-full
-                              bg-blue-50
-                              text-blue-500
-                              flex
-                              items-center
-                              justify-center
-                              mx-auto
-                              mb-6
-                            "
+                    {competitors.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-4">
+                        {competitors.map((service, index) => (
+                          <article
+                            key={service.serviceName || index}
+                            className="rounded-2xl border border-gray-200 p-5"
                           >
-                            <Search size={38} strokeWidth={1.8} />
-                          </div>
+                            <h3 className="font-bold text-gray-900 mb-2">
+                              {service.serviceName}
+                            </h3>
 
-                          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                            아직 경쟁 서비스 탐색 결과가 없습니다
-                          </h3>
-
-                          <p className="text-[#3D4770] text-base leading-7 mb-8">
-                            이 프로젝트는 아직 경쟁 서비스 탐색을 진행하지 않았습니다.
-                            <br />
-                            현재 입력된 아이디어를 기준으로 유사 서비스와 시장을 분석할 수 있습니다.
-                          </p>
-
-                          <button
-                            onClick={handleExplore}
-                            className="
-                              h-12
-                              px-8
-                              rounded-xl
-                              bg-blue-600
-                              text-white
-                              font-bold
-                              inline-flex
-                              items-center
-                              gap-2
-                              hover:bg-blue-700
-                              active:scale-[0.98]
-                              transition
-                            "
-                          >
-                            <Sparkles size={18} />
-                            경쟁 서비스 탐색하기
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </section>
-                ) : (
-                  <>
-                    {/* 2. 유사 서비스 분석 결과 */}
-                    <section className="mb-8">
-                      <h2 className="text-lg font-bold text-gray-900 mb-2">
-                        2. 유사 서비스 분석 결과
-                      </h2>
-
-                      <div className="flex items-center gap-2 text-sm text-[#3D4770] mb-4">
-                        <Sparkles size={18} className="text-blue-500" />
-                        <span>
-                          AI가 현재 프로젝트의 아이디어와 유사한 경쟁 서비스를 분석했습니다.
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-[1fr_54px_340px] gap-5 items-center">
-                        <div className="rounded-2xl border border-gray-200 bg-[#F8FAFF] p-6">
-                          <div className="flex items-center justify-between gap-4 mb-5">
-                            <div className="flex items-center gap-2">
-                              <Search size={18} className="text-blue-500" />
-                              <h3 className="text-base font-bold text-gray-900">
-                                유사 서비스 리스트 요약
-                              </h3>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setIsListOpen(true)}
-                              className="
-                                h-9
-                                px-4
-                                rounded-lg
-                                border
-                                border-blue-200
-                                bg-white
-                                text-blue-600
-                                text-sm
-                                font-bold
-                                hover:bg-blue-50
-                                active:scale-[0.98]
-                                transition
-                              "
-                            >
-                              전체 리스트 보기
-                            </button>
-                          </div>
-
-                          {/* 유사 서비스 태그: 최대 3개 + 나머지 개수 */}
-                          {similarServices.length > 0 ? (
-                            <div className="flex flex-wrap gap-2 mb-5">
-                              {previewServices.map((service, index) => (
-                                <span
-                                  key={service.serviceName || index}
-                                  className="
-                                    px-3
-                                    py-2
-                                    rounded-full
-                                    border
-                                    text-sm
-                                    font-bold
-                                    text-blue-600
-                                    bg-blue-50
-                                    border-blue-100
-                                  "
-                                >
-                                  {service.serviceName || `유사 서비스 ${index + 1}`}
-                                </span>
-                              ))}
-
-                              {hiddenServiceCount > 0 && (
-                                <span
-                                  className="
-                                    px-3
-                                    py-2
-                                    rounded-full
-                                    border
-                                    text-sm
-                                    font-bold
-                                    text-gray-600
-                                    bg-gray-50
-                                    border-gray-200
-                                  "
-                                >
-                                  +{hiddenServiceCount}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="mb-5 rounded-xl bg-white border border-gray-100 px-5 py-4">
-                              <p className="text-sm text-[#3D4770]">
-                                AI가 탐색한 유사 서비스가 없는 경우 이 문구가 표시됩니다.
-                              </p>
-                            </div>
-                          )}
-
-                          {/* AI 요약 */}
-                          <div className="rounded-xl bg-white border border-gray-100 p-5">
-                            <h4 className="text-sm font-bold text-gray-900 mb-3">
-                              AI 유사 서비스 요약
-                            </h4>
-
-                            <ul className="space-y-2 text-sm text-[#3D4770] leading-6">
-                              <li>유사 서비스들의 공통 특징 요약이 표시됩니다.</li>
-                              <li>현재 프로젝트와 비교했을 때 부족한 기능이나 한계점이 표시됩니다.</li>
-                              <li>BMC 생성 과정에서 참고할 수 있는 경쟁 구조 요약이 표시됩니다.</li>
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-center">
-                          <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-blue-500 font-bold shadow-sm">
-                            VS
-                          </div>
-                        </div>
-
-                        <div className="rounded-2xl border-2 border-blue-500 bg-white overflow-hidden shadow-sm">
-                          <div className="h-11 bg-blue-600 text-white flex items-center px-5 gap-2 font-bold">
-                            <Sparkles size={18} />
-                            유사 서비스와 차별점
-                          </div>
-
-                          <div className="p-5">
-                            {competitors.slice(0, 3).map((item, index) => (
-                              <div
-                                key={item.serviceName}
-                                className={`flex gap-3 ${
-                                  index !== competitors.slice(0, 3).length - 1 ? "mb-4" : ""
-                                }`}
-                              >
-                                <CheckCircle2
-                                  size={22}
-                                  className="text-blue-500 shrink-0 mt-1"
-                                />
-
-                                <div>
-                                  <h4 className="text-sm font-bold text-gray-900 mb-1">
-                                    {item.serviceName}
-                                  </h4>
-
-                                  <p className="text-sm text-gray-500 leading-6">
-                                    {item.differentiation}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* 3. 인사이트 요약 */}
-                    <section>
-                      <h2 className="text-lg font-bold text-gray-900 mb-4">
-                        3. 인사이트 요약
-                      </h2>
-
-                      <div className="grid grid-cols-3 gap-5">
-                        {insights.map((item) => (
-                          <div
-                            key={item.title}
-                            className="h-[125px] rounded-2xl border border-gray-200 bg-white px-6 flex items-center gap-5 shadow-sm"
-                          >
-                            <div className="text-blue-500 shrink-0">
-                              {item.icon}
-                            </div>
-
-                            <div>
-                              <h3 className="text-base font-bold text-gray-900 mb-2">
-                                {item.title}
-                              </h3>
-
-                              <p className="text-sm text-[#3D4770] leading-6">
-                                {item.desc}
-                              </p>
-                            </div>
-                          </div>
+                            <p className="text-sm text-[#3D4770] leading-6">
+                              {service.differentiation}
+                            </p>
+                          </article>
                         ))}
                       </div>
-                    </section>
-                  </>
+                    ) : (
+                      <p className="text-gray-500">
+                        비슷한 서비스를 찾지 못했어요.
+                      </p>
+                    )}
+                  </section>
+                ) : (
+                  <div className="min-h-[320px] rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-5 text-center px-10">
+                    {!hasIdea ? (
+                      <>
+                        <p className="text-gray-500">먼저 아이디어를 입력해 주세요.</p>
+                        <Link to="/idea" className="font-bold text-blue-600">
+                          아이디어 입력하기
+                        </Link>
+                      </>
+                    ) : isSearching ? (
+                      <AILoading title="비슷한 서비스를 찾는 중이에요" />
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleExplore}
+                          disabled={noneLeft}
+                          className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold inline-flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                        >
+                          <Search size={18} />
+                          경쟁 서비스 탐색
+                        </button>
+
+                        {bmcLimit && (
+                          <p className="text-sm text-gray-500">
+                            오늘 {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}회 남음
+                          </p>
+                        )}
+
+                        {error && <p className="text-sm text-red-500">{error}</p>}
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between px-12 bg-white">
+            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end gap-3 px-12 bg-white">
+              <button
+                onClick={() => navigate("/idea")}
+                className="h-11 px-5 rounded-xl border border-blue-200 text-blue-600 font-bold flex items-center gap-2 hover:bg-blue-50 transition"
+              >
+                <RotateCcw size={18} />
+                아이디어 수정
+              </button>
 
-              {/* LEFT */}
-              <div className="flex items-center gap-3 h-full">
-                <ShieldCheck size={22} className="shrink-0" />
-
-                <span className="text-[#3D4770] font-medium flex items-center h-full">
-                  BMC 생성 완료 후 프로젝트 데이터가 저장됩니다.
-                </span>
-              </div>
-
-              {/* RIGHT */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handlePrev}
-                  className="
-                    h-11
-                    px-6
-                    rounded-xl
-                    border
-                    border-blue-200
-                    text-blue-600
-                    font-bold
-                    flex
-                    items-center
-                    gap-2
-                    hover:bg-blue-50
-                    active:scale-[0.98]
-                    transition
-                  "
-                >
-                  <RotateCcw size={18} />
-                  아이디어 수정
-                </button>
-
-                <button
-                  onClick={() => setIsBMCSelectOpen(true)}
-                  className="
-                    h-11
-                    px-7
-                    rounded-xl
-                    bg-blue-600
-                    text-white
-                    font-bold
-                    flex
-                    items-center
-                    gap-2
-                    hover:bg-blue-700
-                    active:scale-[0.98]
-                    transition
-                  "
-                >
-                  BMC 생성
-                  <ArrowRight size={18} />
-                </button>
-              </div>
-
+              <button
+                onClick={() => setIsBMCSelectOpen(true)}
+                disabled={!hasIdea}
+                className="h-11 px-6 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+              >
+                BMC 작성
+                <ArrowRight size={18} />
+              </button>
             </footer>
+
             <CompetitorListPanel
               open={isListOpen}
               onClose={() => setIsListOpen(false)}
-              services={competitors}
+              services={competitors ?? []}
             />
             <BMCSelectModal
               open={isBMCSelectOpen}

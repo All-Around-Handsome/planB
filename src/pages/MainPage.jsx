@@ -3,6 +3,7 @@ import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLogin } from "../contexts/LoginContext.jsx";
 
 const scrollToSection = (id) => {
   const element = document.getElementById(id);
@@ -18,43 +19,36 @@ const guideSteps = [
   {
     step: "STEP 1",
     title: "아이디어 입력",
-    desc: "사업 아이디어의 제목과 핵심 내용을 입력합니다.",
     image: "/Guide/PlanB_01_Idea_Input.png",
   },
   {
     step: "STEP 2",
     title: "경쟁 서비스 탐색",
-    desc: "입력한 아이디어와 유사한 경쟁 서비스를 탐색합니다.",
     image: "/Guide/PlanB_02_Competitor_Explore.png",
   },
   {
     step: "STEP 3",
     title: "BMC 자동 생성",
-    desc: "AI가 아이디어를 기반으로 비즈니스 모델 캔버스를\n생성합니다.",
     image: "/Guide_03_Create.png",
   },
   {
     step: "STEP 4",
     title: "BMC 분석",
-    desc: "생성된 BMC의 강점과 보완점을 분석합니다.",
     image: "/Guide_04_Analyze.png",
   },
   {
     step: "STEP 5",
     title: "분석 결과 확인",
-    desc: "AI 분석 결과를 확인하고 개선 방향을 파악합니다.",
     image: "/Guide_05_Result.png",
   },
   {
     step: "STEP 6",
     title: "마이페이지",
-    desc: "생성한 아이디어와 BMC 기록을 관리합니다.",
     image: "/Guide_06_MyPage.png",
   },
   {
     step: "STEP 7",
     title: "BMC 수정",
-    desc: "필요한 내용을 직접 수정하며 BMC를 완성합니다.",
     image: "/Guide_07_Edit.png",
   },
 ];
@@ -62,15 +56,10 @@ const guideSteps = [
 function MainPage() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  
-  const isLoggedIn = false; // 나중에 실제 로그인 상태로 교체
+  const { isLogin } = useLogin();
 
   const handleStart = () => {
-    if (isLoggedIn) {
-      navigate("/idea");
-    } else {
-      navigate("/auth");
-    }
+    navigate(isLogin ? "/idea" : "/auth");
   };
 
   const prevStep = () => {
@@ -89,6 +78,7 @@ function MainPage() {
 
   return (
     <MainLayout>
+      <main>
       {/* Hero */}
       <section
         id="hero"
@@ -147,9 +137,7 @@ function MainPage() {
               </h1>
 
               <p className="text-gray-600 text-xl leading-8">
-                AI가 도와주는 비즈니스 모델 분석으로,
-                <br />
-                아이디어를 실행 가능한 전략으로 바꿔보세요.
+                AI와 함께 만드는 비즈니스 모델 캔버스
               </p>
 
               <Button onClick={handleStart}>시작하기</Button>
@@ -158,7 +146,8 @@ function MainPage() {
 
           {/* Scroll Button */}
           <button
-            onClick={() => scrollToSection("description")}
+            aria-label="사용 방법 보기"
+            onClick={() => scrollToSection("guide")}
             className="
               absolute
               bottom-10
@@ -174,38 +163,6 @@ function MainPage() {
             <ChevronDown size={44} strokeWidth={1.5} />
           </button>
         </div>
-      </section>
-
-      {/* Description */}
-      <section
-        id="description"
-        className="relative bg-[#F9FAFB] py-40"
-      >
-        <div className="max-w-[1440px] mx-auto px-10 text-center">
-          <p className="text-gray-800 text-4xl font-bold leading-[1.7]">
-            아이디어를 입력하면 비즈니스 모델이 구조화됩니다.
-            <br />
-            AI 기반 분석을 통해 BMC를 자동 생성하고,
-            <br />
-            핵심 요소를 빠르게 정리할 수 있습니다.
-          </p>
-        </div>
-
-        <button
-          onClick={() => scrollToSection("guide")}
-          className="
-            absolute
-            bottom-8
-            left-1/2
-            -translate-x-1/2
-            text-gray-500
-            hover:text-blue-500
-            transition
-            animate-bounce
-          "
-        >
-          <ChevronDown size={44} strokeWidth={1.5} />
-        </button>
       </section>
 
       {/* Guide */}
@@ -316,51 +273,15 @@ function MainPage() {
                   {step.step}
                 </p>
 
-                <h3 className="text-5xl font-bold text-gray-900 leading-tight mb-8">
+                <h3 className="text-5xl font-bold text-gray-900 leading-tight">
                   {step.title}
                 </h3>
-
-                <p className="text-gray-500 text-lg leading-8 mb-8 min-h-[72px] whitespace-pre-line">
-                  {step.desc}
-                </p>
-
-                {/* Progress */}
-                <div className="flex gap-2 mt-2">
-                  {guideSteps.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`
-                        h-2 rounded-full transition-all duration-300
-                        ${
-                          currentStep === index
-                            ? "w-10 bg-blue-500"
-                            : "w-2 bg-gray-300"
-                        }
-                      `}
-                    />
-                  ))}
-                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <style>
-          {`
-            @keyframes slideIn {
-              from {
-                opacity: 0;
-                transform: translateX(40px);
-              }
-
-              to {
-                opacity: 1;
-                transform: translateX(0);
-              }
-            }
-          `}
-        </style>
       </section>
+      </main>
     </MainLayout>
   );
 }

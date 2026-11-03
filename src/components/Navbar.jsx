@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useLogin } from "../contexts/LoginContext.jsx";
 import { getProfile } from "../api/bmc";
+import { BACKEND_URL } from "../api/config";
 
 
 function Navbar() {
@@ -13,7 +14,6 @@ function Navbar() {
 
   useEffect(() => {
     if (!isLogin) {
-      setProfile(null);
       return;
     }
 
@@ -35,7 +35,7 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:8080/api/auth/logout",
+        `${BACKEND_URL}/api/auth/logout`,
         {},
         {
           headers: {

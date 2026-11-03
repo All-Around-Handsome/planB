@@ -529,7 +529,7 @@ function BMCEditPage() {
 
   return (
     <MainLayout>
-      <div className="w-full min-h-screen bg-white flex justify-center overflow-x-hidden">
+      <main className="w-full min-h-screen bg-white flex justify-center overflow-x-hidden">
         <div className="w-full max-w-[1440px] px-12 py-8">
 
           {/* 상단 */}
@@ -623,6 +623,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.KEY_PARTNERS
                     }
@@ -656,6 +657,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.KEY_ACTIVITIES
                     }
@@ -686,6 +688,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.KEY_RESOURCES
                     }
@@ -720,6 +723,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.VALUE_PROPOSITION
                     }
@@ -760,6 +764,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.CUSTOMER_RELATIONSHIPS
                     }
@@ -796,6 +801,7 @@ function BMCEditPage() {
                     variant="small"
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.CHANNELS
                     }
@@ -830,6 +836,7 @@ function BMCEditPage() {
                     }
                     editContent={editContent}
                     editMemo={editMemo}
+                    focusMemo={focusMemo}
                     showMemo={
                       !!visibleMemos.CUSTOMER_SEGMENT
                     }
@@ -871,6 +878,7 @@ function BMCEditPage() {
                   }
                   editContent={editContent}
                   editMemo={editMemo}
+                  focusMemo={focusMemo}
                   showMemo={
                     !!visibleMemos.COST_STRUCTURE
                   }
@@ -902,6 +910,7 @@ function BMCEditPage() {
                   }
                   editContent={editContent}
                   editMemo={editMemo}
+                  focusMemo={focusMemo}
                   showMemo={
                     !!visibleMemos.REVENUE_STREAM
                   }
@@ -926,7 +935,7 @@ function BMCEditPage() {
             </div>
           </section>
         </div>
-      </div>
+      </main>
     </MainLayout>
   );
 }

@@ -6,9 +6,7 @@ function MainLayout({ children }) {
     <div className="min-h-screen">
       <Navbar />
 
-      <main>
-        {children}
-      </main>
+      {children}
 
       <Footer />
     </div>

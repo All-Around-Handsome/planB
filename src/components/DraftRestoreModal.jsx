@@ -22,13 +22,9 @@ function DraftRestoreModal({
         p-8
         shadow-xl
       ">
-        <h2 className="text-xl font-bold mb-4">
-          작성 중인 프로젝트가 있습니다
+        <h2 className="text-xl font-bold mb-8">
+          작성하던 아이디어를 불러올까요?
         </h2>
-
-        <p className="text-gray-600 mb-8">
-          이전에 작성하던 아이디어를 불러오시겠습니까?
-        </p>
 
         <div className="flex justify-end gap-3">
           <button

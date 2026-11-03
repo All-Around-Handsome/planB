@@ -29,11 +29,8 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
         <div className="h-20 shrink-0 border-b border-gray-200 px-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              유사 서비스 전체 리스트
+              유사 서비스
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              AI가 탐색한 경쟁 서비스 목록입니다.
-            </p>
           </div>
 
           <button
@@ -199,7 +196,7 @@ function CompetitorListPanel({ open, onClose, services = [] }) {
 
               <p className="text-sm text-[#3D4770] leading-6">
                 AI가 현재 프로젝트 아이디어를 기준으로 탐색했지만,
-                표시할 유사 서비스가 없는 경우 이 문구가 표시됩니다.
+                유사 서비스가 없어요.
               </p>
             </div>
           )}

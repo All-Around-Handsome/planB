@@ -1,3 +1,5 @@
+import { requestAi } from "./bmc";
+
 // true: Mock 데이터 사용 (AI 서버 없이 화면 테스트)
 // false: 실제 AI API 연동 데이터 사용
 const USE_MOCK = false;
@@ -54,26 +56,8 @@ export async function generateBmc(data) {
   }
 
 
-  // 실제 AI 서버 연동
-  // POST /api/ai/bmc/generate
-  const response = await fetch(
-    "http://localhost:8081/api/ai/bmc/generate",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-
-  if (!response.ok) {
-    throw new Error("BMC 생성 실패");
-  }
-
-
-  return response.json();
+  // POST /api/bmc/ai/generate
+  return requestAi("generate", data);
 }
 
 
@@ -88,24 +72,6 @@ export async function analyzeBmc(data) {
   }
 
 
-  // 실제 AI 서버 연동
-  // POST /api/ai/bmc/analyze
-  const response = await fetch(
-    "http://localhost:8081/api/ai/bmc/analyze",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
-
-
-  if (!response.ok) {
-    throw new Error("BMC 분석 실패");
-  }
-
-
-  return response.json();
+  // POST /api/bmc/ai/analyze
+  return requestAi("analyze", data);
 }

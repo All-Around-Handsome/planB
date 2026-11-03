@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8080";
+import { BACKEND_URL } from "./config";
 
 
 // 공통 API 요청
@@ -31,9 +31,12 @@ async function request(url, options = {}) {
 
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       result.error?.message || "API 요청 실패"
     );
+
+    error.status = response.status;
+    throw error;
   }
 
 
@@ -56,26 +59,14 @@ export async function getBmcLimit() {
   });
 }
 
-// 경쟁 탐색 횟수 차감
-export async function checkSearch() {
-  return request("/api/bmc/check-search", {
+// AI 호출: 백엔드가 로그인과 횟수를 확인한 뒤 AI 서버로 전달한다
+export async function requestAi(path, data) {
+  const result = await request(`/api/bmc/ai/${path}`, {
     method: "POST",
+    body: JSON.stringify(data),
   });
-}
 
-// 생성 횟수 차감
-export async function checkGeneration() {
-  return request("/api/bmc/check-generation", {
-    method: "POST",
-  });
-}
-
-
-// 분석 횟수 차감
-export async function checkAnalysis() {
-  return request("/api/bmc/check-analysis", {
-    method: "POST",
-  });
+  return result?.data;
 }
 
 // BMC 생성 결과 저장

@@ -30,7 +30,7 @@ function BMCSelectModal({
         "
       >
         <h2 className="text-xl font-bold text-gray-900 mb-6">
-          BMC 작성 방식 선택
+          BMC를 어떻게 작성할까요?
         </h2>
 
         <div className="grid grid-cols-2 gap-5">
@@ -56,14 +56,9 @@ function BMCSelectModal({
               size={28}
             />
 
-            <h3 className="font-bold text-gray-900 mb-2">
-              AI 기반 BMC 생성
+            <h3 className="font-bold text-gray-900">
+              AI로 생성
             </h3>
-
-            <p className="text-sm text-[#3D4770] leading-5">
-              아이디어를 기반으로
-              AI가 BMC를 자동 작성합니다.
-            </p>
           </button>
 
 
@@ -88,14 +83,9 @@ function BMCSelectModal({
               size={28}
             />
 
-            <h3 className="font-bold text-gray-900 mb-2">
-              BMC 직접 작성
+            <h3 className="font-bold text-gray-900">
+              직접 작성
             </h3>
-
-            <p className="text-sm text-[#3D4770] leading-5">
-              직접 BMC Canvas를 작성하고
-              AI 분석을 진행합니다.
-            </p>
           </button>
 
         </div>

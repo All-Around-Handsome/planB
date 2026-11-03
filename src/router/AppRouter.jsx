@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 
 import GuestRoute from "../components/GuestRoute";
 import MemberRoute from "../components/MemberRoute";
@@ -10,7 +10,6 @@ import ExplorePage from "../pages/ExplorePage";
 import BMCCreatePage from "../pages/BMCCreatePage";
 import BMCAnalyzePage from "../pages/BMCAnalyzePage";
 import BMCResultPage from "../pages/BMCResultPage";
-import BMCAnalyzeResultPage from "../pages/BMCAnalyzeResultPage";
 import MyPage from "../pages/MyPage";
 import BMCEditPage from "../pages/BMCEditPage";
 
@@ -18,6 +17,15 @@ import KakaoCallback from "../pages/oauth/KakaoCallback";
 import GoogleCallback from "../pages/oauth/GoogleCallback";
 
 import ScrollToTop from "../components/ScrollToTop";
+
+import { getProjectData } from "../utils/projectStorage";
+
+// 결과 메뉴: 마지막으로 만든 결과로 이동한다
+function LatestResultRedirect() {
+  const id = getProjectData()?.lastBmcRecordId;
+
+  return <Navigate to={id ? `/bmc/result/${id}` : "/my"} replace />;
+}
 
 function AppRouter() {
   return (
@@ -76,12 +84,11 @@ function AppRouter() {
           }
         />
 
-        {/* 제거 예정 */}
         <Route
           path="/bmc/result"
           element={
             <MemberRoute>
-              <BMCResultPage />
+              <LatestResultRedirect />
             </MemberRoute>
           }
         />
@@ -95,12 +102,11 @@ function AppRouter() {
           }
         />
 
-        {/* 제거 예정 */}
         <Route
           path="/bmc/analyze/result"
           element={
             <MemberRoute>
-              <BMCAnalyzeResultPage />
+              <LatestResultRedirect />
             </MemberRoute>
           }
         />
@@ -109,7 +115,7 @@ function AppRouter() {
           path="/bmc/analyze/result/:bmcRecordId"
           element={
             <MemberRoute>
-              <BMCAnalyzeResultPage />
+              <BMCResultPage />
             </MemberRoute>
           }
         />

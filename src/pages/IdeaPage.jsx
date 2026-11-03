@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   ShieldCheck,
@@ -14,170 +14,140 @@ import { getBmcLimit } from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
-import ProjectNav from "../components/ProjectNav";
 import Textarea from "../components/Textarea";
 import DraftRestoreModal from "../components/DraftRestoreModal";
 import BMCSelectModal from "../components/BMCSelectModal";
 
 import {
+  getDraftData,
+  getProjectData,
   saveProjectData,
   saveDraftData,
   removeDraftData,
 } from "../utils/projectStorage";
 
+const STEP_OPTIONS = [
+  { id: "idea", icon: Lightbulb, title: "아이디어" },
+  { id: "validate", icon: ShieldCheck, title: "검증" },
+  { id: "launch", icon: Rocket, title: "초기 런칭" },
+  { id: "growth", icon: TrendingUp, title: "성장" },
+];
+
+const SEARCH_OPTIONS = [
+  { id: "withSearch", icon: Target, title: "경쟁 탐색 후 작성" },
+  { id: "withoutSearch", icon: FileText, title: "바로 작성" },
+];
+
+const EMPTY_FORM = {
+  ideaTitle: "",
+  ideaContent: "",
+  selectedStep: "idea",
+  searchOption: "withSearch",
+};
+
+function OptionGroup({ label, options, value, onChange, columns }) {
+  return (
+    <section>
+      <h2 className="text-sm font-bold text-gray-900 mb-3">{label}</h2>
+
+      <div className={`grid gap-3 ${columns}`}>
+        {options.map(({ id, icon: Icon, title }) => {
+          const active = value === id;
+
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(id)}
+              className={`
+                h-14
+                rounded-xl
+                border
+                flex
+                items-center
+                justify-center
+                gap-2
+                text-sm
+                font-bold
+                transition
+                ${
+                  active
+                    ? "border-blue-500 bg-blue-50 text-blue-600"
+                    : "border-gray-200 text-gray-700 hover:border-blue-300"
+                }
+              `}
+            >
+              <Icon size={18} />
+              {title}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function IdeaPage() {
-
-  const [ideaTitle, setIdeaTitle] = useState("");
-  const [ideaContent, setIdeaContent] = useState("");
-  const [selectedStep, setSelectedStep] = useState("idea");
-  const [searchOption, setSearchOption] = useState("withSearch");
-  const [showDraftModal, setShowDraftModal] = useState(false);
-  const [draftData, setDraftData] = useState(null);
-  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const isFresh = !!state?.fresh;
 
+  const [form, setForm] = useState(() =>
+    isFresh ? EMPTY_FORM : { ...EMPTY_FORM, ...getProjectData() }
+  );
+  const [draftData, setDraftData] = useState(() =>
+    isFresh ? null : getDraftData()
+  );
+  const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
   const [bmcLimit, setBmcLimit] = useState(null);
 
-  // 입력값 변경 시 임시 저장 (페이지 이탈 후 복구용)
   useEffect(() => {
-    const draft = {
-      ideaTitle,
-      ideaContent,
-      selectedStep,
-      searchOption,
-    };
-
-    if (ideaTitle || ideaContent) {
-      saveDraftData(draft);
-    }
-  }, [
-    ideaTitle,
-    ideaContent,
-    selectedStep,
-    searchOption,
-  ]);
-
-  // 기존 프로젝트 데이터 불러오기 (BMC 생성 이후 저장된 프로젝트)
-  useEffect(() => {
-    const savedProject = localStorage.getItem("planb_project");
-
-    if (savedProject) {
-      const data = JSON.parse(savedProject);
-
-      setIdeaTitle(data.ideaTitle || "");
-      setIdeaContent(data.ideaContent || "");
-      setSelectedStep(data.selectedStep || "idea");
-      setSearchOption(data.searchOption || "withSearch");
-    }
-  }, []);
-
-  // 이전 작성 중이던 아이디어 임시 저장 데이터 확인
-  useEffect(() => {
-    const draft = localStorage.getItem("currentProjectDraft");
-
-    if (draft) {
-      setDraftData(JSON.parse(draft));
-      setShowDraftModal(true);
-    }
-  }, []);
-
-  // AI 사용 가능 횟수 조회
-  useEffect(() => {
-    async function fetchLimit() {
-      try {
-        const response = await getBmcLimit();
-
-        if (response.success) {
+    getBmcLimit()
+      .then((response) => {
+        if (response?.success) {
           setBmcLimit(response.data);
         }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    fetchLimit();
+      })
+      .catch((error) => console.error("사용 횟수 조회 실패", error));
   }, []);
 
-  const stepOptions = [
-    {
-      id: "idea",
-      icon: <Lightbulb size={42} strokeWidth={1.8} />,
-      title: "아이디어",
-      desc: "아이디어를 구체화하고\n가능성을 탐색하는 단계",
-    },
-    {
-      id: "validate",
-      icon: <ShieldCheck size={42} strokeWidth={1.8} />,
-      title: "검증",
-      desc: "시장을 조사하고\n가설을 검증하는 단계",
-    },
-    {
-      id: "launch",
-      icon: <Rocket size={42} strokeWidth={1.8} />,
-      title: "초기 런칭",
-      desc: "MVP를 출시하고\n초기 고객을 확보하는 단계",
-    },
-    {
-      id: "growth",
-      icon: <TrendingUp size={42} strokeWidth={1.8} />,
-      title: "성장",
-      desc: "서비스를 확장하고\n성장을 가속하는 단계",
-    },
-  ];
+  // 사용자가 직접 고친 내용만 임시 저장한다
+  const updateForm = (patch) => {
+    const next = { ...form, ...patch };
 
-  const searchOptions = [
-    {
-      id: "withSearch",
-      icon: <Target size={38} strokeWidth={1.8} />,
-      title: "경쟁 탐색 진행",
-      desc: "유사 서비스와 시장을 분석합니다.",
-    },
-    {
-      id: "withoutSearch",
-      icon: <FileText size={38} strokeWidth={1.8} />,
-      title: "탐색 없이 바로 BMC 생성",
-      desc: "경쟁 탐색을 건너뛰고 바로 생성합니다.",
-    },
-  ];
-
-  const handleRestoreDraft = () => {
-    if (!draftData) return;
-
-    setIdeaTitle(draftData.ideaTitle || "");
-    setIdeaContent(draftData.ideaContent || "");
-    setSelectedStep(draftData.selectedStep || "idea");
-    setSearchOption(draftData.searchOption || "withSearch");
-
-    setShowDraftModal(false);
+    setForm(next);
+    saveDraftData({
+      ideaTitle: next.ideaTitle,
+      ideaContent: next.ideaContent,
+      selectedStep: next.selectedStep,
+      searchOption: next.searchOption,
+    });
   };
 
+  const handleRestoreDraft = () => {
+    setForm({ ...form, ...draftData });
+    setDraftData(null);
+  };
 
   const handleNewProject = () => {
     removeDraftData();
-
-    setIdeaTitle("");
-    setIdeaContent("");
-    setSelectedStep("idea");
-    setSearchOption("withSearch");
-
-    setShowDraftModal(false);
+    setForm(EMPTY_FORM);
+    setDraftData(null);
   };
 
+  const canSubmit = form.ideaTitle.trim() && form.ideaContent.trim();
+
   const handleSubmit = () => {
-    const projectData = {
-      ideaTitle,
-      ideaContent,
-      selectedStep,
-      searchOption,
-    };
-
-    console.log("저장", projectData);
-
-    saveProjectData(projectData);
-
+    saveProjectData({
+      ideaTitle: form.ideaTitle,
+      ideaContent: form.ideaContent,
+      selectedStep: form.selectedStep,
+      searchOption: form.searchOption,
+    });
     removeDraftData();
 
-    if (searchOption === "withSearch") {
+    if (form.searchOption === "withSearch") {
       navigate("/explore");
     } else {
       setIsBMCSelectOpen(true);
@@ -187,200 +157,69 @@ function IdeaPage() {
   return (
     <MainLayout>
       <DraftRestoreModal
-        open={showDraftModal}
+        open={!!draftData}
         onRestore={handleRestoreDraft}
         onNew={handleNewProject}
-      />       
+      />
       <div className="w-full bg-white flex justify-center overflow-x-hidden">
         <div className="w-full max-w-[1440px] flex">
-          {/* 왼쪽 STEP 사이드바 */}
           <Sidebar activeStep="idea" />
 
-          {/* 가운데 프로필/이동 메뉴 */}
-          <ProjectNav />
-
-          {/* 오른쪽 메인 영역 */}
-          <main className="flex-1 flex flex-col">
-            {/* 상단 헤더 */}
+          <main className="flex-1 min-w-0 flex flex-col">
             <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
               <input
-                value={ideaTitle}
-                onChange={(e) => setIdeaTitle(e.target.value)}
-                placeholder="아이디어 제목 입력"
-                className="
-                  w-full
-                  text-2xl
-                  font-bold
-                  text-gray-900
-                  placeholder:text-gray-400
-                  outline-none
-                "
+                value={form.ideaTitle}
+                onChange={(e) => updateForm({ ideaTitle: e.target.value })}
+                placeholder="아이디어 제목"
+                className="w-full text-2xl font-bold text-gray-900 placeholder:text-gray-400 outline-none"
               />
             </header>
 
-            {/* 콘텐츠 */}
-            <div className="px-12 pt-8 pb-11 shrink-0">
-              <div className="max-w-[1120px]">
-                {/* 1. 아이디어 입력 */}
-                <section className="mb-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">
-                    1. 아이디어 입력
-                  </h2>
+            <div className="flex-1 px-12 py-8">
+              <div className="max-w-[1120px] flex flex-col gap-6">
+                <Textarea
+                  placeholder="어떤 문제를, 누구를 위해, 어떻게 해결하나요?"
+                  value={form.ideaContent}
+                  onChange={(ideaContent) => updateForm({ ideaContent })}
+                  rows={10}
+                  limit={1000}
+                  maxLimit={1500}
+                />
 
-                  <Textarea
-                    placeholder={`아이디어를 자세히 입력해주세요`}
-                    value={ideaContent}
-                    onChange={setIdeaContent}
-                    rows={12}
-                    limit={1000}
-                    maxLimit={1500}
-                  />
-                </section>
+                <OptionGroup
+                  label="진행 단계"
+                  options={STEP_OPTIONS}
+                  value={form.selectedStep}
+                  onChange={(selectedStep) => updateForm({ selectedStep })}
+                  columns="grid-cols-4"
+                />
 
-                {/* 2. 진행 단계 선택 */}
-                <section className="mb-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">
-                    2. 진행 단계 선택
-                  </h2>
-
-                  <div className="grid grid-cols-4 gap-5">
-                    {stepOptions.map((option) => {
-                      const active = selectedStep === option.id;
-
-                      return (
-                        <button
-                          key={option.id}
-                          onClick={() => setSelectedStep(option.id)}
-                          className={`
-                            h-[180px]
-                            rounded-2xl
-                            border
-                            flex flex-col
-                            items-center
-                            justify-center
-                            text-center
-                            transition
-                            ${
-                              active
-                                ? "border-blue-500 bg-blue-50 text-blue-500 shadow-sm"
-                                : "border-gray-200 bg-white text-[#071642] hover:border-blue-300 hover:bg-blue-50/40"
-                            }
-                          `}
-                        >
-                          <div className="mb-5">{option.icon}</div>
-
-                          <h3
-                            className={`
-                              text-xl font-bold mb-3
-                              ${active ? "text-blue-500" : "text-gray-900"}
-                            `}
-                          >
-                            {option.title}
-                          </h3>
-
-                          <p className="text-sm leading-6 text-[#3D4770] whitespace-pre-line">
-                            {option.desc}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                {/* 3. 경쟁 서비스 탐색 설정 */}
-                <section>
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">
-                    3. 경쟁 서비스 탐색 설정
-                  </h2>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    {searchOptions.map((option) => {
-                      const active = searchOption === option.id;
-
-                      return (
-                        <button
-                          key={option.id}
-                          onClick={() => setSearchOption(option.id)}
-                          className={`
-                            h-[110px]
-                            rounded-2xl
-                            border
-                            flex
-                            items-center
-                            px-10
-                            gap-8
-                            text-left
-                            transition
-                            ${
-                              active
-                                ? "border-blue-500 bg-blue-50 text-blue-500 shadow-sm"
-                                : "border-gray-200 bg-white text-[#071642] hover:border-blue-300 hover:bg-blue-50/40"
-                            }
-                          `}
-                        >
-                          <div>{option.icon}</div>
-
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">
-                              {option.title}
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770]">
-                              {option.desc}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
+                <OptionGroup
+                  label="경쟁 탐색"
+                  options={SEARCH_OPTIONS}
+                  value={form.searchOption}
+                  onChange={(searchOption) => updateForm({ searchOption })}
+                  columns="grid-cols-2"
+                />
               </div>
             </div>
 
-            {/* 하단 고정 영역 */}
             <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between px-12 bg-white">
-              
-              {/* LEFT */}
-              <div className="flex items-center gap-3 h-full">
-                <ShieldCheck size={22} className="shrink-0" />
+              <p className="text-sm text-gray-500">
+                {bmcLimit &&
+                  `오늘 남은 횟수: 탐색 ${bmcLimit.remainingSearch} · 생성 ${bmcLimit.remainingGeneration} · 분석 ${bmcLimit.remainingAnalysis}`}
+              </p>
 
-                {bmcLimit && (
-                  <div className="text-sm font-semibold text-gray-500">
-                    AI 사용 가능{" "}
-                    <span className="text-blue-600">
-                      탐색 {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}
-                      {" · "}
-                      생성 {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}
-                      {" · "}
-                      분석 {bmcLimit.remainingAnalysis}/{bmcLimit.analysisLimit}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* RIGHT */}
               <button
                 onClick={handleSubmit}
-                className="
-                  h-12
-                  px-8
-                  rounded-xl
-                  bg-blue-600
-                  text-white
-                  font-bold
-                  flex
-                  items-center
-                  gap-3
-                  hover:bg-blue-700
-                  active:scale-[0.98]
-                  transition
-                "
+                disabled={!canSubmit}
+                className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
               >
                 <Sparkles size={20} />
-                BMC 작성 시작
+                다음
               </button>
-
             </footer>
+
             <BMCSelectModal
               open={isBMCSelectOpen}
               onClose={() => setIsBMCSelectOpen(false)}

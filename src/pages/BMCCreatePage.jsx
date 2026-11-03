@@ -1,171 +1,88 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  RotateCcw,
-  Sparkles,
-  CheckCircle2,
-} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { RotateCcw, Sparkles } from "lucide-react";
+
 import { generateBmc } from "../api/bmcAi";
 import {
   getBmcLimit,
-  checkGeneration,
   saveGeneratedBmc,
 } from "../api/bmc";
 
 import MainLayout from "../layouts/MainLayout";
 import Sidebar from "../components/Sidebar";
-import ProjectNav from "../components/ProjectNav";
-import BMCLoading from "../components/BMCLoading";
+import AILoading from "../components/AILoading";
 
-import { getProjectData } from "../utils/projectStorage";
+import { getProjectData, saveProjectData } from "../utils/projectStorage";
+import {
+  STAGE_CODES,
+  STAGE_LABELS,
+  bmcToItems,
+  buildIdeaText,
+} from "../utils/bmc";
 
 function BMCCreatePage() {
   const navigate = useNavigate();
 
-  const [project, setProject] = useState({
-    ideaTitle: "",
-    ideaContent: "",
-    selectedStep: "idea",
-    searchOption: "withoutSearch",
-  });
-
+  const [project] = useState(() => getProjectData());
   const [bmcLimit, setBmcLimit] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isGenerated, setIsGenerated] = useState(false);
-  const [generatedBmc, setGeneratedBmc] = useState(null);
-  const [bmcRecordId, setBmcRecordId] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const savedProject = getProjectData();
-
-    if (savedProject) {
-      setProject(savedProject);
-    }
-
-    async function fetchBmcLimit() {
-      try {
-        const response = await getBmcLimit();
-
-        if (response.success) {
+    getBmcLimit()
+      .then((response) => {
+        if (response?.success) {
           setBmcLimit(response.data);
         }
-      } catch (error) {
-        console.error("사용 횟수 조회 실패", error);
-      }
-    }
-
-    fetchBmcLimit();
+      })
+      .catch((error) => console.error("사용 횟수 조회 실패", error));
   }, []);
 
-  const stageMap = {
-    idea: "아이디어",
-    validate: "검증",
-    launch: "초기런칭",
-    growth: "성장",
-  };
-
-  const backendStageMap = {
-    idea: "IDEA",
-    validate: "VALIDATION",
-    launch: "LAUNCH",
-    growth: "GROWTH",
-  };
+  const hasIdea = !!project?.ideaContent?.trim();
+  const noneLeft = bmcLimit?.remainingGeneration === 0;
 
   const handleGenerate = async () => {
+    setIsGenerating(true);
+    setError("");
+
     try {
-      setIsGenerating(true);
-
-      // 1. 생성 횟수 차감
-      await checkGeneration();
-
-      // 2. 차감된 최신 사용량 조회
-      const updatedLimit = await getBmcLimit();
-
-      if (updatedLimit.success) {
-        setBmcLimit(updatedLimit.data);
-      }
-
-      // 3. AI 생성
       const aiResult = await generateBmc({
         idea: project.ideaContent,
-        stage: stageMap[project.selectedStep],
+        stage: STAGE_LABELS[project.selectedStep],
         useCompetitorContext: project.searchOption === "withSearch",
       });
 
-      // 화면에 저장
-      setGeneratedBmc(aiResult);
-
-      // 4. 생성 결과 저장
-      const saveResult = await saveGeneratedBmc({
-        ideaText: project.ideaContent,
-        stage: backendStageMap[project.selectedStep],
+      const saved = await saveGeneratedBmc({
+        ideaText: buildIdeaText(project.ideaTitle, project.ideaContent),
+        stage: STAGE_CODES[project.selectedStep],
         bmcType: "AI_GENERATED",
-        items: [
-          {
-            itemType: "VALUE_PROPOSITION",
-            content: aiResult.valueProposition,
-          },
-          {
-            itemType: "CUSTOMER_SEGMENT",
-            content: aiResult.customerSegments,
-          },
-          {
-            itemType: "REVENUE_STREAM",
-            content: aiResult.revenueStreams,
-          },
-          {
-            itemType: "COST_STRUCTURE",
-            content: aiResult.costStructure,
-          },
-          {
-            itemType: "KEY_PARTNERS",
-            content: aiResult.keyPartners,
-          },
-          {
-            itemType: "KEY_ACTIVITIES",
-            content: aiResult.keyActivities,
-          },
-          {
-            itemType: "KEY_RESOURCES",
-            content: aiResult.keyResources,
-          },
-          {
-            itemType: "CHANNELS",
-            content: aiResult.channels,
-          },
-          {
-            itemType: "CUSTOMER_RELATIONSHIPS",
-            content: aiResult.customerRelationships,
-          },
-        ],
+        items: bmcToItems(aiResult),
       });
 
-      if (saveResult.success) {
-        const id = saveResult.data.bmcRecordId;
-
-        setBmcRecordId(id);
-        setIsGenerated(true);
-
-        console.log("저장된 BMC ID:", id);
+      if (!saved?.success) {
+        setError("생성한 BMC를 저장하지 못했어요.");
+        return;
       }
 
+      const id = saved.data.bmcRecordId;
+
+      saveProjectData({ ...project, lastBmcRecordId: id });
+      navigate(`/bmc/result/${id}`);
     } catch (error) {
       console.error("BMC 생성 실패", error);
+
+      if (error.status === 429) {
+        setBmcLimit((prev) => prev && { ...prev, remainingGeneration: 0 });
+      }
+
+      setError(
+        error.status === 429
+          ? "오늘 생성 횟수를 모두 사용했어요."
+          : "BMC를 생성하지 못했어요. 잠시 후 다시 시도해 주세요."
+      );
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handlePrev = () => {
-    navigate("/idea");
-  };
-
-  const handleNext = () => {
-    if (!bmcRecordId) {
-      return;
-    }
-    navigate(`/bmc/result/${bmcRecordId}`);
   };
 
   return (
@@ -174,276 +91,63 @@ function BMCCreatePage() {
         <div className="w-full max-w-[1440px] flex">
           <Sidebar activeStep="create" />
 
-          <ProjectNav />
-
-          <main className="flex-1 flex flex-col self-stretch">
-            {/* 상단 헤더 */}
+          <main className="flex-1 min-w-0 flex flex-col self-stretch">
             <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {project.ideaTitle || "아이디어 제목 입력"}
+              <h1 className="text-2xl font-bold text-gray-900 truncate">
+                {project?.ideaTitle || "BMC 생성"}
               </h1>
             </header>
 
-            <div className="flex-1 px-12 pt-8 pb-8">
-              <div className="max-w-[1120px] h-full flex flex-col">
-                {/* 1. 현재 프로젝트 아이디어 */}
-                <section className="mb-8">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">
-                    1. 현재 프로젝트 아이디어
-                  </h2>
+            <div className="flex-1 px-12 py-8">
+              <div className="max-w-[1120px] flex flex-col gap-6">
+                {hasIdea && (
+                  <p className="rounded-2xl bg-[#F8FAFF] p-6 text-[#071642] leading-7 whitespace-pre-line">
+                    {project.ideaContent}
+                  </p>
+                )}
 
-                  <div className="rounded-2xl border-2 border-blue-400 bg-white p-6 shadow-sm">
-                    <p className="text-base font-medium text-[#071642] leading-7 whitespace-pre-line">
-                      {project.ideaContent || "입력된 아이디어 내용이 없습니다."}
-                    </p>
-                  </div>
-                </section>
-
-                {/* 2. BMC 생성 */}
-                <section className="flex-1 flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900">
-                      2. AI 기반 BMC 생성
-                    </h2>
-
-                    <div className="flex items-center gap-4">
-                      {bmcLimit && (
-                        <div className="text-sm font-semibold text-gray-500">
-                          오늘 생성 가능 횟수{" "}
-                          <span className="text-blue-600">
-                            {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}
-                          </span>
-                        </div>
-                      )}
-
-                      {isGenerated && (
-                        <div className="flex items-center gap-2 text-sm font-bold text-blue-600">
-                          <CheckCircle2 size={18} />
-                          BMC 생성 완료
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isGenerated ? (
-                    <div
-                      className="
-                        flex-1
-                        min-h-[500px]
-                        rounded-2xl
-                        border
-                        border-gray-200
-                        bg-[#F8FAFF]
-                        px-10
-                        py-14
-                        text-center
-                        flex
-                        flex-col
-                        items-center
-                        justify-center
-                      "
-                    >
-                      {isGenerating ? (
-                        <BMCLoading duration={3000} />
-                      ) : (
-                        <>
-                          <div className="w-20 h-20 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-6">
-                            <Sparkles size={38} strokeWidth={1.8} />
-                          </div>
-
-                          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                            아직 생성된 BMC가 없습니다
-                          </h3>
-
-                          <p className="text-[#3D4770] text-base leading-7 mb-8">
-                            현재 입력된 아이디어를 기준으로
-                            <br />
-                            AI가 비즈니스 모델 캔버스를 자동 생성합니다.
-                          </p>
-
-                          <button
-                            onClick={handleGenerate}
-                            className="
-                              h-12
-                              px-8
-                              rounded-xl
-                              bg-blue-600
-                              text-white
-                              font-bold
-                              inline-flex
-                              items-center
-                              gap-2
-                              hover:bg-blue-700
-                              active:scale-[0.98]
-                              transition
-                            "
-                          >
-                            <Sparkles size={18} />
-                            BMC 생성하기
-                          </button>
-                        </>
-                      )}
-                    </div>
+                <div className="min-h-[320px] rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-5 text-center px-10">
+                  {!hasIdea ? (
+                    <>
+                      <p className="text-gray-500">먼저 아이디어를 입력해 주세요.</p>
+                      <Link to="/idea" className="font-bold text-blue-600">
+                        아이디어 입력하기
+                      </Link>
+                    </>
+                  ) : isGenerating ? (
+                    <AILoading title="BMC를 만드는 중이에요" />
                   ) : (
-                    <div className="w-full rounded-[28px] border border-gray-200 bg-[#F8FAFF] p-5 shadow-sm">
-                      {/* 상단 5열 영역 */}
-                      <div className="grid grid-cols-5 gap-4 h-[430px]">
-                        {/* Key Partners */}
-                        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                          <h3 className="text-base font-bold text-gray-900 mb-4">
-                            핵심 파트너
-                          </h3>
+                    <>
+                      <button
+                        onClick={handleGenerate}
+                        disabled={noneLeft}
+                        className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold inline-flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      >
+                        <Sparkles size={18} />
+                        BMC 생성
+                      </button>
 
-                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                            {generatedBmc?.keyPartners}
-                          </p>
-                        </div>
+                      {bmcLimit && (
+                        <p className="text-sm text-gray-500">
+                          오늘 {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}회 남음
+                        </p>
+                      )}
 
-                        {/* Key Activities + Key Resources */}
-                        <div className="grid grid-rows-2 gap-4">
-                          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">
-                              핵심 활동
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                              {generatedBmc?.keyActivities}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">
-                              핵심 자원
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                              {generatedBmc?.keyResources}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Value Proposition */}
-                        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                          <h3 className="text-base font-bold text-gray-900 mb-4">
-                            가치 제안
-                          </h3>
-
-                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                            {generatedBmc?.valueProposition}
-                          </p>
-                        </div>
-
-                        {/* Customer Relationships + Channels */}
-                        <div className="grid grid-rows-2 gap-4">
-                          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">
-                              고객 관계
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                              {generatedBmc?.customerRelationships}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                            <h3 className="text-base font-bold text-gray-900 mb-4">
-                              채널
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                              {generatedBmc?.channels}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Customer Segments */}
-                        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                          <h3 className="text-base font-bold text-gray-900 mb-4">
-                            고객 세그먼트
-                          </h3>
-
-                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                            {generatedBmc?.customerSegments}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* cost Structure / Revenue Streams */}
-                      <div className="grid grid-cols-2 gap-4 mt-4 h-[150px]">
-                        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                          <h3 className="text-base font-bold text-gray-900 mb-4">
-                            비용 구조
-                          </h3>
-
-                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                            {generatedBmc?.costStructure}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                          <h3 className="text-base font-bold text-gray-900 mb-4">
-                            수익 구조
-                          </h3>
-
-                          <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                            {generatedBmc?.revenueStreams}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                      {error && <p className="text-sm text-red-500">{error}</p>}
+                    </>
                   )}
-                </section>
+                </div>
               </div>
             </div>
 
-            {/* 하단 버튼 */}
             <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end px-12 bg-white">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handlePrev}
-                  className="
-                    h-11
-                    px-6
-                    rounded-xl
-                    border
-                    border-blue-200
-                    text-blue-600
-                    font-bold
-                    flex
-                    items-center
-                    gap-2
-                    hover:bg-blue-50
-                    active:scale-[0.98]
-                    transition
-                  "
-                >
-                  <RotateCcw size={18} />
-                  아이디어 수정
-                </button>
-
-                <button
-                  onClick={handleNext}
-                  disabled={!bmcRecordId}
-                  className={`
-                    h-11
-                    px-7
-                    rounded-xl
-                    font-bold
-                    flex
-                    items-center
-                    gap-2
-                    transition
-                    ${
-                      isGenerated
-                        ? "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }
-                  `}
-                >
-                  결과 확인
-                  <ArrowRight size={18} />
-                </button>
-              </div>
+              <button
+                onClick={() => navigate("/idea")}
+                className="h-11 px-5 rounded-xl border border-blue-200 text-blue-600 font-bold flex items-center gap-2 hover:bg-blue-50 transition"
+              >
+                <RotateCcw size={18} />
+                아이디어 수정
+              </button>
             </footer>
           </main>
         </div>

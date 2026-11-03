@@ -8,14 +8,9 @@ import {
   Edit3,
   FileText,
   LayoutTemplate,
-  LogOut,
   Plus,
   Search,
-  Settings,
-  Sparkles,
   Trash2,
-  User,
-  X,
 } from "lucide-react";
 
 import {
@@ -33,8 +28,8 @@ function MyPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filter, setFilter] = useState("all");
   const [toastMessage, setToastMessage] = useState("");
-  const [isSettingOpen, setIsSettingOpen] = useState(false);
-  
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const [projects, setProjects] = useState([]);
 
   const [bmcLimit, setBmcLimit] = useState(null);
@@ -56,9 +51,19 @@ function MyPage() {
     }
   };
 
-  const loadBmcList = async () => {
-    console.log("loadBmcList 실행");
+  const loadBmcLimit = async () => {
+    try {
+      const response = await getBmcLimit();
 
+      if (response.success) {
+        setBmcLimit(response.data);
+      }
+    } catch (error) {
+      console.error("AI 사용량 조회 실패", error);
+    }
+  };
+
+  const loadBmcList = async () => {
     try {
       const response = await getBmcList();
 
@@ -100,71 +105,28 @@ function MyPage() {
 
     } catch(error) {
       console.error("BMC 목록 조회 실패", error);
+    } finally {
+      setIsLoaded(true);
     }
   };
 
 
   useEffect(() => {
-    console.log("MyPage mounted");
-
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 비동기 응답에서 상태를 갱신한다
     loadProfile();
     loadBmcList();
     loadBmcLimit();
   }, []);
 
-  useEffect(() => {
+  const handleSearchChange = (value) => {
+    setSearchKeyword(value);
     setCurrentPage(1);
-  }, [searchKeyword, filter]);
+  };
 
-  const aiProjectCount = projects.filter(
-    (project) => project.bmcTypeCode === "ai"
-  ).length;
-
-  const directProjectCount = projects.filter(
-    (project) => project.bmcTypeCode === "direct"
-  ).length;
-
-  const totalAiRemaining =
-    bmcLimit
-      ? (bmcLimit.remainingSearch ?? 0) +
-        (bmcLimit.remainingGeneration ?? 0) +
-        (bmcLimit.remainingAnalysis ?? 0)
-      : 0;
-
-  const stats = [
-    {
-      icon: <FileText size={22} />,
-      title: "전체 프로젝트",
-      value: projects.length,
-      unit: "개",
-      change: null,
-      desc: "",
-    },
-    {
-      icon: <LayoutTemplate size={22} />,
-      title: "AI 생성 프로젝트",
-      value: aiProjectCount,
-      unit: "개",
-      change: null,
-      desc: "",
-    },
-    {
-      icon: <BarChart3 size={22} />,
-      title: "직접 분석 프로젝트",
-      value: directProjectCount,
-      unit: "개",
-      change: null,
-      desc: "",
-    },
-    {
-      icon: <Sparkles size={22} />,
-      title: "AI 남은 사용량",
-      value: totalAiRemaining,
-      unit: "회",
-      change: null,
-      desc: "",
-    },
-  ];
+  const handleFilterChange = (value) => {
+    setFilter(value);
+    setCurrentPage(1);
+  };
 
   const formatDateTime = (date) => {
     if (!date) return "-";
@@ -172,31 +134,6 @@ function MyPage() {
     const [datePart, timePart] = date.split("T");
 
     return `${datePart.replaceAll("-", ".")} ${timePart.slice(0, 5)}`;
-  };
-
-  const latestAnalysis = useMemo(() => {
-    return projects
-      .filter(
-        (project) =>
-          project.score !== null &&
-          project.score !== undefined
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt) - new Date(a.createdAt)
-      )[0];
-  }, [projects]);
-
-  const loadBmcLimit = async () => {
-    try {
-      const response = await getBmcLimit();
-
-      if (response.success) {
-        setBmcLimit(response.data);
-      }
-    } catch (error) {
-      console.error("AI 사용량 조회 실패", error);
-    }
   };
 
   const filteredProjects = useMemo(() => {
@@ -297,107 +234,22 @@ function MyPage() {
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-2xl font-extrabold text-gray-900">
-                      {user?.name || "사용자"}
-                    </h2>
-
-                    {/* 
-                    <span className="px-2 py-1 rounded-md bg-blue-50 text-blue-600 text-xs font-bold">
-                      Pro 플랜
-                    </span>
-                    */}
-                  </div>
-
-                  {/*
-                  <p className="text-sm text-gray-500 mb-1">{user.email}</p>
-                  <p className="text-xs text-gray-400">
-                    마지막 로그인&nbsp;&nbsp; {user.joinedAt}
-                  </p>
-                  */}
+                  <h2 className="text-2xl font-extrabold text-gray-900">
+                    {user?.name || "사용자"}
+                  </h2>
                 </div>
               </div>
 
-              <button
-                onClick={() => setIsSettingOpen(true)}
-                className="
-                  h-11
-                  px-5
-                  rounded-xl
-                  border
-                  border-gray-200
-                  text-gray-600
-                  text-sm
-                  font-bold
-                  flex
-                  items-center
-                  gap-2
-                  hover:border-blue-200
-                  hover:bg-blue-50
-                  hover:text-blue-600
-                  transition
-                "
-              >
-                <Settings size={17} />
-                계정 설정
-              </button>
+              {bmcLimit && (
+                <p className="text-sm text-gray-500">
+                  오늘 남은 횟수: 탐색 {bmcLimit.remainingSearch} · 생성 {bmcLimit.remainingGeneration} · 분석 {bmcLimit.remainingAnalysis}
+                </p>
+              )}
             </section>
 
-            {/* Stat Cards */}
-            <section className="grid grid-cols-4 gap-5 mb-7">
-              {stats.map((item) => (
-                <div
-                  key={item.title}
-                  className="
-                    h-[160px]
-                    rounded-2xl
-                    border
-                    border-gray-200
-                    bg-white
-                    px-6
-                    py-6
-                    shadow-sm
-                  "
-                >
-                  <div className="flex items-center gap-2 text-blue-500 mb-7">
-                    {item.icon}
-                    <span className="text-sm font-bold text-gray-500">
-                      {item.title}
-                    </span>
-                  </div>
-
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-extrabold text-[#071642]">
-                      {item.value}
-                    </span>
-                    <span className="text-lg font-bold text-gray-500 mb-1">
-                      {item.unit}
-                    </span>
-                  </div>
-
-                  {item.change && (
-                    <p className="text-xs text-gray-400 mt-3">
-                      <span className="text-emerald-500 font-bold">
-                        {item.change}
-                      </span>{" "}
-                      {item.desc}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </section>
-
-            <div className="grid grid-cols-[1fr_260px] gap-6">
+            <div>
               {/* Project Area */}
               <section>
-                <div className="border-b border-gray-200 mb-5">
-                  <div className="h-11 inline-flex items-center px-2 border-b-2 border-blue-500">
-                    <span className="text-sm font-bold text-blue-600">
-                      내 프로젝트
-                    </span>
-                  </div>
-                </div>
-                
                 {/* Search / Filter / New Button */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -406,8 +258,8 @@ function MyPage() {
 
                       <input
                         value={searchKeyword}
-                        onChange={(e) => setSearchKeyword(e.target.value)}
-                        placeholder="프로젝트명 검색"
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="검색"
                         className="w-full outline-none text-sm text-gray-700 placeholder:text-gray-300"
                       />
                     </div>
@@ -415,7 +267,7 @@ function MyPage() {
                     <div className="relative">
                       <select
                         value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
+                        onChange={(e) => handleFilterChange(e.target.value)}
                         className="
                           appearance-none
                           w-[120px]
@@ -445,7 +297,7 @@ function MyPage() {
                   </div>
 
                   <button
-                    onClick={() => navigate("/idea")}
+                    onClick={() => navigate("/idea", { state: { fresh: true } })}
                     className="
                       h-10
                       px-5
@@ -463,7 +315,7 @@ function MyPage() {
                     "
                   >
                     <Plus size={17} />
-                    새 프로젝트 만들기
+                    새 프로젝트
                   </button>
                 </div>
 
@@ -472,11 +324,11 @@ function MyPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="h-12 bg-[#F8FAFF] border-b border-gray-100 text-xs text-gray-500">
-                        <th className="text-left px-5 font-bold">아이디어 제목</th>
+                        <th className="text-left px-5 font-bold">제목</th>
                         <th className="text-left px-3 font-bold">생성일</th>
-                        <th className="text-center px-3 font-bold">타당성 점수</th>
+                        <th className="text-center px-3 font-bold">점수</th>
                         <th className="text-center px-3 font-bold">타입</th>
-                        <th className="text-center px-3 font-bold">작업</th>
+                        <th className="px-3"><span className="sr-only">작업</span></th>
                       </tr>
                     </thead>
 
@@ -494,7 +346,7 @@ function MyPage() {
                               </div>
 
                               <button
-                                onClick={() => handleEdit(project)}
+                                onClick={() => navigate(`/bmc/result/${project.id}`)}
                                 className="
                                   text-sm
                                   font-bold
@@ -546,29 +398,26 @@ function MyPage() {
                               <button
                                 onClick={() => handleEdit(project)}
                                 className="text-gray-400 hover:text-blue-600 transition"
-                                title="편집"
+                                title="수정"
+                                aria-label={`${project.name} 수정`}
                               >
                                 <Edit3 size={16} />
                               </button>
 
                               <button
-                                onClick={() =>
-                                  navigate(
-                                    project.bmcTypeCode === "ai"
-                                      ? `/bmc/result/${project.id}`
-                                      : `/bmc/analyze/result/${project.id}`
-                                  )
-                                }
+                                onClick={() => navigate(`/bmc/result/${project.id}`)}
                                 className="text-gray-400 hover:text-blue-600 transition"
-                                title="내보내기"
+                                title="결과 보기"
+                                aria-label={`${project.name} 결과 보기`}
                               >
-                                <LogOut size={16} />
+                                <FileText size={16} />
                               </button>
 
                               <button
                                 onClick={() => handleDelete(project)}
                                 className="text-gray-400 hover:text-red-500 transition"
                                 title="삭제"
+                                aria-label={`${project.name} 삭제`}
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -579,15 +428,15 @@ function MyPage() {
                     </tbody>
                   </table>
 
-                  {filteredProjects.length === 0 && (
+                  {isLoaded && filteredProjects.length === 0 && (
                     <div className="h-[180px] flex items-center justify-center text-sm text-gray-400">
-                      검색 결과가 없습니다.
+                      {projects.length === 0 ? "아직 프로젝트가 없어요." : "검색 결과가 없어요."}
                     </div>
                   )}
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-center gap-2 mt-5">
+                <div className={`items-center justify-center gap-2 mt-5 ${totalPages > 1 ? "flex" : "hidden"}`}>
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((prev) => prev - 1)}
@@ -620,176 +469,10 @@ function MyPage() {
                 </div>
               </section>
 
-              {/* Right Cards */}
-              <aside className="flex flex-col gap-5">
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-base font-extrabold text-gray-900">
-                      최근 분석 이력
-                    </h3>
-                  </div>
-
-                  <div className="flex flex-col gap-4">
-                    {latestAnalysis ? (
-                      <div className="rounded-xl bg-blue-50/50 p-4">
-
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="text-blue-500">
-                            {latestAnalysis.icon}
-                          </div>
-
-                          <p className="flex-1 text-sm font-bold text-[#071642] truncate">
-                            {latestAnalysis.name}
-                          </p>
-                        </div>
-
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">
-                            타당성 점수
-                          </span>
-
-                          <span className="text-xl font-extrabold text-blue-600">
-                            {latestAnalysis.score}점
-                          </span>
-                        </div>
-
-                      </div>
-                    ) : (
-                      <div className="h-[100px] flex items-center justify-center text-sm text-gray-400">
-                        아직 분석 이력이 없습니다.
-                      </div>
-                    )}
-                  </div>
-
-
-                  <button
-                    onClick={() => {
-                      if (!latestAnalysis) return;
-
-                      navigate(
-                        latestAnalysis.bmcTypeCode === "ai"
-                          ? `/bmc/result/${latestAnalysis.id}`
-                          : `/bmc/analyze/result/${latestAnalysis.id}`
-                      );
-                    }}
-                    disabled={!latestAnalysis}
-                    className="
-                      w-full
-                      h-10
-                      mt-5
-                      rounded-xl
-                      border
-                      border-blue-100
-                      text-blue-600
-                      text-sm
-                      font-bold
-                      hover:bg-blue-50
-                      transition
-                      disabled:opacity-40
-                      disabled:cursor-not-allowed
-                    "
-                  >
-                    분석 결과 보기
-                  </button>
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-5">
-                    <Sparkles size={18} className="text-blue-500" />
-
-                    <h3 className="text-base font-extrabold text-gray-900">
-                      AI 사용 현황
-                    </h3>
-                  </div>
-
-                  <div className="space-y-5">
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        경쟁탐색
-                      </span>
-
-                      <span className="font-bold text-gray-900">
-                        {bmcLimit
-                          ? `${bmcLimit.remainingSearch} / ${bmcLimit.searchLimit}회`
-                          : "- / -"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        BMC 생성
-                      </span>
-
-                      <span className="font-bold text-blue-600">
-                        {bmcLimit
-                          ? `${bmcLimit.remainingGeneration} / ${bmcLimit.generationLimit}회`
-                          : "- / -"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        BMC 분석
-                      </span>
-
-                      <span className="font-bold text-purple-600">
-                        {bmcLimit
-                          ? `${bmcLimit.remainingAnalysis} / ${bmcLimit.analysisLimit}회`
-                          : "- / -"}
-                      </span>
-                    </div>
-
-                  </div>
-                </div>
-              </aside>
             </div>
           </main>
         </div>
       </div>
-
-      {/* Setting Modal */}
-      {isSettingOpen && (
-        <div className="fixed inset-0 z-[9998] bg-black/30 flex items-center justify-center">
-          <div className="w-[460px] rounded-3xl bg-white shadow-[0_20px_60px_rgba(15,23,42,0.2)] p-7">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-extrabold text-gray-900">
-                계정 설정
-              </h3>
-
-              <button
-                onClick={() => setIsSettingOpen(false)}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-gray-200 p-5 flex items-center gap-4">
-                <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center overflow-hidden">
-                  {user?.profileImageUrl ? (
-                    <img
-                      src={user.profileImageUrl}
-                      alt="프로필"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User size={22} />
-                  )}
-                </div>
-
-                <div>
-                  <p className="font-bold text-gray-900">
-                    {user?.name || "사용자"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       {toastMessage && (

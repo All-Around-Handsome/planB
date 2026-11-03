@@ -1,3 +1,5 @@
+import { requestAi } from "./bmc";
+
 // true: Mock 데이터 사용 (AI 서버 없이 화면 테스트)
 // false: 실제 AI API 연동 데이터 사용
 const USE_MOCK = false;
@@ -60,25 +62,6 @@ export async function searchCompetitors(idea) {
   }
 
 
-  // 실제 AI 서버 연동
-  // POST /api/ai/competitors
-  // 사용자가 입력한 아이디어를 기반으로 경쟁 서비스 분석 결과 반환
-  const response = await fetch(
-    "http://localhost:8081/api/ai/competitors",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ idea }),
-    }
-  );
-
-
-  if (!response.ok) {
-    throw new Error("경쟁사 분석 실패");
-  }
-
-
-  return response.json();
+  // POST /api/bmc/ai/competitors
+  return requestAi("competitors", { idea });
 }
