@@ -62,4 +62,17 @@ public class DailyLimit {
     public void incrementSearchCount() {
         this.searchCount++;
     }
+
+    // AI 호출 실패 시 되돌리기
+    public void decrementGenerationCount() {
+        this.generationCount = Math.max(0, this.generationCount - 1);
+    }
+
+    public void decrementAnalysisCount() {
+        this.analysisCount = Math.max(0, this.analysisCount - 1);
+    }
+
+    public void decrementSearchCount() {
+        this.searchCount = Math.max(0, this.searchCount - 1);
+    }
 }

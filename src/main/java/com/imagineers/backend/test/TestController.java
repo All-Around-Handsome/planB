@@ -5,7 +5,7 @@ import com.imagineers.backend.global.exception.CustomException;
 import com.imagineers.backend.global.exception.ErrorCode;
 import com.imagineers.backend.global.jwt.JwtTokenProvider;
 import com.imagineers.backend.domain.limit.service.LimitService;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +13,8 @@ import java.util.Map;
 
 
 
+// 로그인 없이 토큰을 발급하므로 로컬 개발에서만 켠다 (spring.profiles.active=local)
+@Profile("local")
 @RestController
 public class TestController {
 

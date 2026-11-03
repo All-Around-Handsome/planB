@@ -27,6 +27,9 @@ public class KakaoOAuthClient {
     @Value("${oauth.kakao.client-id}")
     private String clientId;
 
+    @Value("${oauth.kakao.client-secret:}")
+    private String clientSecret;
+
     @Value("${oauth.kakao.redirect-uri}")
     private String redirectUri;
 
@@ -46,6 +49,9 @@ public class KakaoOAuthClient {
         body.add("client_id", clientId);              // 우리 REST API 키
         body.add("redirect_uri", redirectUri);        // 등록한 redirect_uri와 동일해야 함
         body.add("code", code);                       // 프론트가 받은 인가 코드
+        if (!clientSecret.isBlank()) {
+            body.add("client_secret", clientSecret);  // 콘솔에서 시크릿을 켠 경우에만 필요
+        }
 
         KakaoTokenResponse response = restClient.post()
                 .uri(tokenUri)

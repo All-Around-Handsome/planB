@@ -19,10 +19,13 @@ public enum ErrorCode {
     NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "존재하지 않는 리소스입니다."),
 
     // 429 - 횟수 초과
-    LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "LIMIT_EXCEEDED", "오늘의 생성 횟수를 모두 사용하였습니다."),
+    LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "LIMIT_EXCEEDED", "오늘 사용 가능한 횟수를 모두 사용하였습니다."),
 
     // 500 - 서버 오류
-    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다.");
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "서버 내부 오류가 발생했습니다."),
+
+    // 502 - AI 서버 오류
+    AI_FAILED(HttpStatus.BAD_GATEWAY, "AI_FAILED", "AI 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus httpStatus;  // HTTP 상태코드 (400, 401 등)
     private final String code;            // 에러 코드 문자열

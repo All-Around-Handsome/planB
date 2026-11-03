@@ -33,6 +33,7 @@ dependencies {
 
 	// MySQL 드라이버 - Java와 MySQL 연결 다리
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	// Lombok - getter, setter, constructor 자동 생성
 	compileOnly 'org.projectlombok:lombok'

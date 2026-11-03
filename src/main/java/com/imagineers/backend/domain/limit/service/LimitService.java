@@ -127,6 +127,22 @@ public class LimitService {
         return new LimitCheckResponse(true, remaining, dailySearchLimit);
     }
 
+    // AI 호출 실패 시 차감 되돌리기
+    public void refundGeneration(Long userId) {
+        dailyLimitRepository.findForUpdate(userId, LocalDate.now())
+                .ifPresent(DailyLimit::decrementGenerationCount);
+    }
+
+    public void refundAnalysis(Long userId) {
+        dailyLimitRepository.findForUpdate(userId, LocalDate.now())
+                .ifPresent(DailyLimit::decrementAnalysisCount);
+    }
+
+    public void refundSearch(Long userId) {
+        dailyLimitRepository.findForUpdate(userId, LocalDate.now())
+                .ifPresent(DailyLimit::decrementSearchCount);
+    }
+
     /**
      * 오늘 남은 횟수 조회 (차감 없음!)
      * 프론트가 페이지 진입 시 "생성 3/5, 분석 4/5" 표시용으로 호출한다.
@@ -169,7 +185,7 @@ public class LimitService {
         LocalDate today = LocalDate.now(); // 오늘 날짜 (자정 지나면 자동으로 다음 날짜)
 
         return dailyLimitRepository
-                .findByUserIdAndLimitDate(userId, today)
+                .findForUpdate(userId, today)
                 .orElseGet(() -> {
                     // 오늘 기록이 없으면 → 사용자를 찾아서 새 기록 생성
                     User user = userRepository.findById(userId)
