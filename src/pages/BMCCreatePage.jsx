@@ -50,6 +50,8 @@ function BMCCreatePage() {
         idea: project.ideaContent,
         stage: STAGE_LABELS[project.selectedStep],
         useCompetitorContext: project.searchOption === "withSearch",
+        // 경쟁 탐색에서 받은 결과를 넘겨 AI가 같은 서비스를 다시 찾지 않게 한다
+        competitors: project.exploreResult?.slice(0, 10),
       });
 
       const saved = await saveGeneratedBmc({
