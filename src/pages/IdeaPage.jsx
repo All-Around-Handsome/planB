@@ -38,6 +38,8 @@ const SEARCH_OPTIONS = [
   { id: "withoutSearch", icon: FileText, title: "바로 작성" },
 ];
 
+const MIN_IDEA_LENGTH = 10;
+
 const EMPTY_FORM = {
   ideaTitle: "",
   ideaContent: "",
@@ -136,7 +138,10 @@ function IdeaPage() {
     setDraftData(null);
   };
 
-  const canSubmit = form.ideaTitle.trim() && form.ideaContent.trim();
+  // AI 서버가 10자 미만 아이디어를 거절하므로 미리 안내한다
+  const ideaLength = form.ideaContent.trim().length;
+  const isIdeaTooShort = ideaLength > 0 && ideaLength < MIN_IDEA_LENGTH;
+  const canSubmit = form.ideaTitle.trim() && ideaLength >= MIN_IDEA_LENGTH;
 
   const handleSubmit = () => {
     saveProjectData({
@@ -205,10 +210,16 @@ function IdeaPage() {
             </div>
 
             <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between px-12 bg-white">
-              <p className="text-sm text-gray-500">
-                {bmcLimit &&
-                  `오늘 남은 횟수: 탐색 ${bmcLimit.remainingSearch} · 생성 ${bmcLimit.remainingGeneration} · 분석 ${bmcLimit.remainingAnalysis}`}
-              </p>
+              {isIdeaTooShort ? (
+                <p className="text-sm text-red-500" role="status">
+                  아이디어를 {MIN_IDEA_LENGTH}자 이상 입력해 주세요. (지금 {ideaLength}자)
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  {bmcLimit &&
+                    `오늘 남은 횟수: 탐색 ${bmcLimit.remainingSearch} · 생성 ${bmcLimit.remainingGeneration} · 분석 ${bmcLimit.remainingAnalysis}`}
+                </p>
+              )}
 
               <button
                 onClick={handleSubmit}
