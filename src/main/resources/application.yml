@@ -11,12 +11,12 @@ anthropic:
   max-tokens: 4096
 
 voyage:
-  api-key: ${VOYAGE_API_KEY}
+  api-key: ${VOYAGE_API_KEY:}
   model: voyage-4
   dimension: 1024
 
 qdrant:
-  host: ${QDRANT_HOST}
+  host: ${QDRANT_HOST:}
   port: ${QDRANT_PORT:6334}
   api-key: ${QDRANT_API_KEY:}
   use-tls: ${QDRANT_USE_TLS:true}

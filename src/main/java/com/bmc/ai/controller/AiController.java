@@ -47,7 +47,7 @@ public class AiController {
     /** G-001: BMC 9항목 자동 생성. */
     @PostMapping("/bmc/generate")
     public BusinessModelCanvas generateBmc(@Valid @RequestBody BmcGenerationRequest req) {
-        return bmcGenerationService.generate(req.idea(), req.stage(), req.useCompetitorContext());
+        return bmcGenerationService.generate(req.idea(), req.stage(), req.useCompetitorContext(), req.competitors());
     }
 
     /** N-011/012/013: 사용자가 직접 입력한 BMC 분석. */

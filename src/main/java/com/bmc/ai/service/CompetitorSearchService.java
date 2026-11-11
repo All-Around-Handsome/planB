@@ -67,10 +67,39 @@ public class CompetitorSearchService {
     public CompetitorAnalysis searchAndAnalyze(String idea) {
         List<EmbeddingMatch<TextSegment>> matches = retrieveSimilar(idea);
         if (matches.isEmpty()) {
-            return new CompetitorAnalysis(List.of());
+            // 검색 데이터가 없거나 비슷한 항목이 없으면 모델이 아는 실제 서비스로 대신 분석한다
+            return analyzer.discover(idea);
         }
         String competitorsContext = toContext(matches);
         return analyzer.analyze(idea, competitorsContext);
+    }
+
+    /** BMC 생성용 경쟁 서비스 컨텍스트. 검색 결과가 없으면 모델이 아는 서비스로 채운다. */
+    public String buildContext(String idea) {
+        List<EmbeddingMatch<TextSegment>> matches = retrieveSimilar(idea);
+        if (!matches.isEmpty()) {
+            return toContext(matches);
+        }
+        return toContext(analyzer.discover(idea));
+    }
+
+    /** 비교 분석 결과(프론트가 이미 받은 탐색 결과 포함)를 프롬프트용 텍스트로 변환. */
+    public static String toContext(CompetitorAnalysis analysis) {
+        if (analysis == null || analysis.competitors() == null || analysis.competitors().isEmpty()) {
+            return "";
+        }
+        return analysis.competitors().stream()
+                .filter(c -> c != null && c.serviceName() != null)
+                .map(c -> """
+                        - name: %s
+                          category: %s
+                          targetCustomer: %s
+                          revenueModel: %s
+                          coreFeatures: %s
+                          differentiation: %s""".formatted(
+                        c.serviceName(), c.category(), c.targetCustomer(),
+                        c.revenueModel(), c.coreFeatures(), c.differentiation()))
+                .collect(Collectors.joining("\n"));
     }
 
     /** 검색 결과를 프롬프트용 텍스트로 변환. */
