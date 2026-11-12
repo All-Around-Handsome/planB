@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { RotateCcw, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { PenLine, RotateCcw, Sparkles } from "lucide-react";
 
 import { generateBmc } from "../api/bmcAi";
 import {
@@ -8,9 +8,11 @@ import {
   saveGeneratedBmc,
 } from "../api/bmc";
 
-import MainLayout from "../layouts/MainLayout";
-import Sidebar from "../components/Sidebar";
+import WorkspaceLayout from "../layouts/WorkspaceLayout";
 import AILoading from "../components/AILoading";
+import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
+import IdeaSummary from "../components/IdeaSummary";
 
 import { getProjectData, saveProjectData } from "../utils/projectStorage";
 import {
@@ -87,74 +89,60 @@ function BMCCreatePage() {
     }
   };
 
+  const stageLabel = STAGE_LABELS[project?.selectedStep];
+  const withSearch = project?.searchOption === "withSearch";
+  const competitorCount = project?.exploreResult?.length ?? 0;
+
   return (
-    <MainLayout>
-      <div className="w-full bg-white flex justify-center overflow-x-hidden">
-        <div className="w-full max-w-[1440px] flex">
-          <Sidebar activeStep="create" />
+    <WorkspaceLayout
+      step="create"
+      title={project?.ideaTitle || "BMC 생성"}
+      description="아이디어를 바탕으로 AI가 비즈니스 모델 캔버스 9개 블록을 채워요."
+      actions={
+        <>
+          <Button variant="ghost" icon={RotateCcw} onClick={() => navigate("/idea")}>
+            아이디어 수정
+          </Button>
+          <span />
+        </>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        {hasIdea && <IdeaSummary text={project.ideaContent} />}
 
-          <main className="flex-1 min-w-0 flex flex-col self-stretch">
-            <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <h1 className="text-2xl font-bold text-gray-900 truncate">
-                {project?.ideaTitle || "BMC 생성"}
-              </h1>
-            </header>
-
-            <div className="flex-1 px-12 py-8">
-              <div className="max-w-[1120px] flex flex-col gap-6">
-                {hasIdea && (
-                  <p className="rounded-2xl bg-[#F8FAFF] p-6 text-[#071642] leading-7 whitespace-pre-line">
-                    {project.ideaContent}
-                  </p>
-                )}
-
-                <div className="min-h-[320px] rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-5 text-center px-10">
-                  {!hasIdea ? (
-                    <>
-                      <p className="text-gray-500">먼저 아이디어를 입력해 주세요.</p>
-                      <Link to="/idea" className="font-bold text-blue-600">
-                        아이디어 입력하기
-                      </Link>
-                    </>
-                  ) : isGenerating ? (
-                    <AILoading title="BMC를 만드는 중이에요" />
-                  ) : (
-                    <>
-                      <button
-                        onClick={handleGenerate}
-                        disabled={noneLeft}
-                        className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold inline-flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-                      >
-                        <Sparkles size={18} />
-                        BMC 생성
-                      </button>
-
-                      {bmcLimit && (
-                        <p className="text-sm text-gray-500">
-                          오늘 {bmcLimit.remainingGeneration}/{bmcLimit.generationLimit}회 남음
-                        </p>
-                      )}
-
-                      {error && <p className="text-sm text-red-500">{error}</p>}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end px-12 bg-white">
-              <button
-                onClick={() => navigate("/idea")}
-                className="h-11 px-5 rounded-xl border border-blue-200 text-blue-600 font-bold flex items-center gap-2 hover:bg-blue-50 transition"
-              >
-                <RotateCcw size={18} />
-                아이디어 수정
-              </button>
-            </footer>
-          </main>
-        </div>
+        {!hasIdea ? (
+          <EmptyState
+            icon={PenLine}
+            title="먼저 아이디어를 입력해 주세요"
+            action={<Button variant="secondary" onClick={() => navigate("/idea")}>아이디어 입력하기</Button>}
+          />
+        ) : isGenerating ? (
+          <div className="min-h-[300px] rounded-2xl border border-gray-200 flex items-center justify-center">
+            <AILoading title="BMC를 만드는 중이에요" description="40초~1분 정도 걸려요. 화면을 닫지 말아 주세요." />
+          </div>
+        ) : (
+          <EmptyState
+            icon={Sparkles}
+            title="AI로 BMC를 만들어 볼까요?"
+            description={[
+              stageLabel && `진행 단계: ${stageLabel}`,
+              withSearch && competitorCount > 0 && `유사 서비스 ${competitorCount}개 참고`,
+              bmcLimit && `오늘 ${bmcLimit.remainingGeneration}/${bmcLimit.generationLimit}회 남음`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+            action={
+              <>
+                <Button variant="accent" icon={Sparkles} onClick={handleGenerate} disabled={noneLeft}>
+                  BMC 생성하기
+                </Button>
+                {error && <p className="text-sm text-red-500">{error}</p>}
+              </>
+            }
+          />
+        )}
       </div>
-    </MainLayout>
+    </WorkspaceLayout>
   );
 }
 

@@ -24,118 +24,49 @@ function AuthPage() {
   };
 
   return (
-    <MainLayout>
-      <main className="relative overflow-hidden">
+    <MainLayout footer={false}>
+      <main className="flex-1 flex items-center justify-center px-5 py-16 bg-[radial-gradient(ellipse_at_top,#eef3ff_0%,#ffffff_60%)]">
+        <div className="w-full max-w-sm animate-fade-up">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+              PlanB 시작하기
+            </h1>
+            <p className="mt-3 text-gray-500">
+              아이디어를 비즈니스 모델로 정리해 보세요.
+            </p>
+          </div>
 
-        {/* LEFT BG */}
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-[#F4F7FF]" />
+          <div className="mt-10 flex flex-col gap-3">
+            <button
+              onClick={handleKakaoLogin}
+              className="relative h-12 w-full rounded-xl bg-[#FEE500] text-[15px] font-semibold text-gray-900 flex items-center justify-center hover:brightness-[0.97] transition"
+            >
+              <img
+                src="/kakao_logo.png"
+                alt=""
+                className="absolute left-4 w-6 h-6 object-contain"
+              />
+              카카오로 계속하기
+            </button>
 
-        {/* RIGHT BG */}
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-[#DCE6FF]" />
+            <button
+              onClick={handleGoogleLogin}
+              className="relative h-12 w-full rounded-xl bg-white border border-gray-200 text-[15px] font-semibold text-gray-900 flex items-center justify-center hover:bg-gray-50 transition"
+            >
+              <img
+                src="/google_logo.png"
+                alt=""
+                className="absolute left-4 w-5 h-5 object-contain"
+              />
+              Google로 계속하기
+            </button>
+          </div>
 
-        {/* CENTER */}
-        <div
-          className="
-            relative
-            z-10
-            max-w-[1440px]
-            mx-auto
-            bg-cover
-            bg-center
-            bg-no-repeat
-          "
-          style={{
-            backgroundImage: "url('/Background.png')",
-          }}
-        >
-          <section className="px-16 py-24">
-            <div className="grid grid-cols-[1fr_560px] items-center gap-20">
-              
-              {/* Left */}
-              <div className="pl-10">
-                <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-                  PlanB에
-                  <br />
-                  오신 것을 환영합니다
-                </h1>
-              </div>
-
-              {/* Right */}
-              <div className="flex justify-center">
-                <div className="w-[560px] bg-white rounded-2xl shadow-[0_10px_30px_rgba(15,23,42,0.08)] px-14 py-12">
-                  <h2 className="text-4xl font-bold text-gray-900 mb-8">
-                    로그인
-                  </h2>
-
-                  <div className="flex flex-col gap-5">
-                    {/* Kakao */}
-                    <button
-                      onClick={handleKakaoLogin}
-                      className="
-                        relative
-                        w-full
-                        h-14
-                        rounded-xl
-                        bg-[#FEE500]
-                        text-gray-900
-                        text-lg
-                        font-bold
-                        flex
-                        items-center
-                        justify-center
-                        transition-all
-                        duration-300
-                        shadow-[0_4px_10px_rgba(0,0,0,0.15)]
-                        hover:brightness-95
-                        active:scale-95
-                      "
-                    >
-                      <img
-                        src="/kakao_logo.png"
-                        alt="Kakao"
-                        className="absolute left-6 w-[34px] h-[34px] object-contain"
-                      />
-
-                      카카오로 시작하기
-                    </button>
-
-                    {/* Google */}
-                    <button
-                      onClick={handleGoogleLogin}
-                      className="
-                        relative
-                        w-full
-                        h-14
-                        rounded-xl
-                        bg-white
-                        border
-                        border-gray-300
-                        text-gray-900
-                        text-lg
-                        font-semibold
-                        flex
-                        items-center
-                        justify-center
-                        transition-all
-                        duration-300
-                        shadow-[0_4px_10px_rgba(0,0,0,0.12)]
-                        hover:bg-gray-50
-                        active:scale-95
-                      "
-                    >
-                      <img
-                        src="/google_logo.png"
-                        alt="Google"
-                        className="absolute left-6 w-[24px] h-[23px] object-contain"
-                      />
-                      Google로 시작하기
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </section>
+          <p className="mt-8 text-center text-xs text-gray-400 leading-relaxed">
+            계속하면 PlanB의 이용약관과 개인정보처리방침에
+            <br />
+            동의하는 것으로 간주돼요.
+          </p>
         </div>
       </main>
     </MainLayout>

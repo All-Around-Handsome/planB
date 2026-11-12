@@ -1,17 +1,20 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   BarChart3,
+  CheckCircle2,
   Copy,
   Download,
   Edit3,
+  ShieldCheck,
 } from "lucide-react";
 
 import { getBmcDetail } from "../api/bmc";
 
-import MainLayout from "../layouts/MainLayout";
-import Sidebar from "../components/Sidebar";
+import WorkspaceLayout from "../layouts/WorkspaceLayout";
+import Button from "../components/Button";
 import BMCDisplayCanvas from "../components/BMCDisplayCanvas";
 
 import { TERM_LABELS, formatDate, getIdeaTitle, itemsToBmc } from "../utils/bmc";
@@ -98,156 +101,159 @@ function BMCResultPage() {
   const hasAnalysis = bmc?.validityScore != null;
 
   return (
-    <MainLayout>
-      <div className="w-full bg-white flex justify-center overflow-x-hidden">
-        <div className="w-full max-w-[1440px] flex">
-          <Sidebar activeStep="result" />
-
-          <main className="flex-1 min-w-0 flex flex-col self-stretch">
-            <header className="h-[72px] border-b border-gray-200 flex items-center justify-between gap-6 px-12">
-              <div className="min-w-0 flex items-baseline gap-3">
-                <h1 className="text-2xl font-bold text-gray-900 truncate">
-                  {bmc ? getIdeaTitle(bmc.ideaText) : "결과"}
-                </h1>
-
-                {bmc && (
-                  <span className="text-sm text-gray-400 shrink-0">
-                    {formatDate(bmc.createdAt)}
-                  </span>
-                )}
-              </div>
-
-              {bmc && (
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={handleCopy}
-                    className="h-10 px-4 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition"
-                  >
-                    <Copy size={16} />
-                    복사
-                  </button>
-
-                  <button
-                    onClick={handleDownload}
-                    className="h-10 px-4 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition"
-                  >
-                    <Download size={16} />
-                    PDF
-                  </button>
-                </div>
-              )}
-            </header>
-
-            <div className="flex-1 px-12 py-8">
-              {isLoading && <p className="text-gray-500">불러오는 중...</p>}
-
-              {error && <p className="text-red-500">{error}</p>}
-
-              {bmc && (
-                <div className="max-w-[1120px] flex flex-col gap-8">
-                  {hasAnalysis && (
-                    <section className="flex items-center gap-6 rounded-2xl bg-[#F8FAFF] p-6">
-                      <div className="shrink-0 flex items-baseline gap-1">
-                        <span className="text-5xl font-extrabold text-blue-600">
-                          {bmc.validityScore}
-                        </span>
-                        <span className="text-lg font-bold text-gray-400">
-                          / 10
-                        </span>
-                      </div>
-
-                      <p className="text-sm text-[#3D4770] leading-6 whitespace-pre-line">
-                        {bmc.scoreReason}
-                      </p>
-                    </section>
-                  )}
-
-                  <BMCDisplayCanvas data={itemsToBmc(bmc.items)} />
-
-                  {bmc.risks?.length > 0 && (
-                    <section>
-                      <h2 className="text-lg font-bold text-gray-900 mb-3">
-                        리스크와 대응
-                      </h2>
-
-                      <ul className="divide-y divide-gray-100 border-y border-gray-100">
-                        {bmc.risks.map((risk) => (
-                          <li key={risk.riskId} className="grid grid-cols-2 gap-6 py-3 text-sm leading-6">
-                            <span className="font-bold text-gray-900">
-                              {risk.riskContent}
-                            </span>
-                            <span className="text-[#3D4770]">
-                              {risk.responseContent}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
-
-                  {bmc.actions?.length > 0 && (
-                    <section>
-                      <h2 className="text-lg font-bold text-gray-900 mb-3">
-                        실행 항목
-                      </h2>
-
-                      <ul className="flex flex-col gap-2">
-                        {bmc.actions.map((action) => (
-                          <li key={action.actionId} className="flex items-start gap-3 text-sm leading-6">
-                            <span className="shrink-0 px-2 rounded-md bg-blue-50 text-blue-600 font-bold">
-                              {TERM_LABELS[action.termType] || action.termType}
-                            </span>
-                            <span className="text-[#3D4770]">
-                              {action.actionContent}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  )}
-                </div>
+    <WorkspaceLayout
+      step="result"
+      title={bmc ? getIdeaTitle(bmc.ideaText) : "결과"}
+      description={
+        bmc &&
+        [formatDate(bmc.createdAt), bmc.bmcType === "AI_GENERATED" ? "AI 생성" : "직접 작성", hasAnalysis && "분석 완료"]
+          .filter(Boolean)
+          .join(" · ")
+      }
+      headerRight={
+        bmc && (
+          <>
+            <Button variant="secondary" size="sm" icon={Copy} onClick={handleCopy}>
+              복사
+            </Button>
+            <Button variant="secondary" size="sm" icon={Download} onClick={handleDownload}>
+              PDF
+            </Button>
+          </>
+        )
+      }
+      actions={
+        bmc && (
+          <>
+            <Button variant="ghost" iconRight={ArrowRight} onClick={() => navigate("/my")}>
+              내 BMC 목록
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={hasAnalysis ? "primary" : "secondary"}
+                icon={Edit3}
+                onClick={() => navigate(`/bmc/edit/${bmc.bmcRecordId}`)}
+              >
+                수정
+              </Button>
+              {!hasAnalysis && (
+                <Button variant="accent" icon={BarChart3} onClick={handleAnalyze}>
+                  분석하기
+                </Button>
               )}
             </div>
+          </>
+        )
+      }
+    >
+      {isLoading && <ResultSkeleton />}
 
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end gap-3 px-12 bg-white">
-              {bmc && (
-                <button
-                  onClick={() => navigate(`/bmc/edit/${bmc.bmcRecordId}`)}
-                  className="h-11 px-5 rounded-xl border border-blue-200 text-blue-600 font-bold flex items-center gap-2 hover:bg-blue-50 transition"
-                >
-                  <Edit3 size={18} />
-                  수정
-                </button>
-              )}
+      {error && <p className="text-red-500">{error}</p>}
 
-              {bmc && !hasAnalysis && (
-                <button
-                  onClick={handleAnalyze}
-                  className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition"
-                >
-                  <BarChart3 size={18} />
-                  분석하기
-                </button>
-              )}
+      {bmc && (
+        <div className="flex flex-col gap-10">
+          {hasAnalysis && <ScoreCard score={bmc.validityScore} reason={bmc.scoreReason} />}
 
-              <button
-                onClick={() => navigate("/my")}
-                className="h-11 px-5 rounded-xl border border-gray-200 text-gray-600 font-bold flex items-center gap-2 hover:bg-gray-50 transition"
-              >
-                내 프로젝트
-                <ArrowRight size={18} />
-              </button>
-            </footer>
-          </main>
+          <section>
+            <SectionTitle>비즈니스 모델 캔버스</SectionTitle>
+            <BMCDisplayCanvas data={itemsToBmc(bmc.items)} />
+          </section>
+
+          {bmc.risks?.length > 0 && (
+            <section>
+              <SectionTitle count={bmc.risks.length}>리스크와 대응</SectionTitle>
+              <ul className="grid md:grid-cols-2 gap-3">
+                {bmc.risks.map((risk) => (
+                  <li key={risk.riskId} className="rounded-xl border border-gray-200 p-5 flex flex-col gap-3 text-sm leading-6">
+                    <p className="flex gap-2.5 font-semibold text-gray-900">
+                      <AlertTriangle size={16} className="mt-1 shrink-0 text-amber-500" />
+                      {risk.riskContent}
+                    </p>
+                    <p className="flex gap-2.5 text-gray-600">
+                      <ShieldCheck size={16} className="mt-1 shrink-0 text-emerald-500" />
+                      {risk.responseContent}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {bmc.actions?.length > 0 && (
+            <section>
+              <SectionTitle count={bmc.actions.length}>실행 계획</SectionTitle>
+              <div className="grid md:grid-cols-3 gap-3">
+                {["SHORT", "MID", "LONG"].map((term) => {
+                  const items = bmc.actions.filter((action) => action.termType === term);
+                  if (items.length === 0) return null;
+
+                  return (
+                    <div key={term} className="rounded-xl bg-gray-50 border border-gray-100 p-5">
+                      <p className="text-xs font-semibold text-gray-400 mb-3">{TERM_LABELS[term]}</p>
+                      <ul className="flex flex-col gap-3">
+                        {items.map((action) => (
+                          <li key={action.actionId} className="flex gap-2.5 text-sm leading-6 text-gray-700">
+                            <CheckCircle2 size={16} className="mt-1 shrink-0 text-gray-300" />
+                            {action.actionContent}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
-      </div>
+      )}
 
       {toastMessage && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] rounded-full bg-[#071642] text-white px-6 py-3 text-sm font-bold shadow-[0_12px_32px_rgba(15,23,42,0.24)]">
+        <div role="status" className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 rounded-full bg-gray-900 text-white px-5 py-2.5 text-sm font-medium shadow-lg animate-fade-up">
           {toastMessage}
         </div>
       )}
-    </MainLayout>
+    </WorkspaceLayout>
+  );
+}
+
+function SectionTitle({ children, count }) {
+  return (
+    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-baseline gap-2">
+      {children}
+      {count != null && <span className="text-sm font-medium text-gray-400">{count}</span>}
+    </h2>
+  );
+}
+
+function ScoreCard({ score, reason }) {
+  const tone = score >= 7 ? "text-emerald-600" : score >= 4 ? "text-amber-500" : "text-red-500";
+  const bar = score >= 7 ? "bg-emerald-500" : score >= 4 ? "bg-amber-400" : "bg-red-500";
+  const label = score >= 7 ? "가능성 높음" : score >= 4 ? "보완 필요" : "재검토 필요";
+
+  return (
+    <section className="rounded-2xl border border-gray-200 p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-10">
+      <div className="shrink-0 md:w-40">
+        <p className="text-xs font-semibold text-gray-400">타당성 점수</p>
+        <p className="mt-2 flex items-baseline gap-1">
+          <span className={`text-5xl font-bold tracking-tight tabular-nums ${tone}`}>{score}</span>
+          <span className="text-lg font-semibold text-gray-300">/ 10</span>
+        </p>
+        <div className="mt-3 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div className={`h-full rounded-full ${bar}`} style={{ width: `${score * 10}%` }} />
+        </div>
+        <p className={`mt-2 text-sm font-semibold ${tone}`}>{label}</p>
+      </div>
+      <p className="text-[15px] leading-7 text-gray-600 whitespace-pre-line">{reason}</p>
+    </section>
+  );
+}
+
+function ResultSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 animate-pulse" aria-label="불러오는 중">
+      <div className="h-32 rounded-2xl bg-gray-100" />
+      <div className="h-80 rounded-2xl bg-gray-100" />
+    </div>
   );
 }
 

@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, RotateCcw, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, PenLine, RotateCcw, Search } from "lucide-react";
 
 import { getBmcLimit } from "../api/bmc";
 import { searchCompetitors } from "../api/competitorApi";
 
-import MainLayout from "../layouts/MainLayout";
-import Sidebar from "../components/Sidebar";
+import WorkspaceLayout from "../layouts/WorkspaceLayout";
 import AILoading from "../components/AILoading";
-import CompetitorListPanel from "../components/CompetitorListPanel";
+import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
+import IdeaSummary from "../components/IdeaSummary";
 import BMCSelectModal from "../components/BMCSelectModal";
 
 import { getProjectData, saveProjectData } from "../utils/projectStorage";
@@ -25,7 +26,6 @@ function ExplorePage() {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
   const [isBMCSelectOpen, setIsBMCSelectOpen] = useState(false);
-  const [isListOpen, setIsListOpen] = useState(false);
 
   useEffect(() => {
     getBmcLimit()
@@ -70,136 +70,124 @@ function ExplorePage() {
   };
 
   return (
-    <MainLayout>
-      <div className="w-full bg-white flex justify-center overflow-x-hidden">
-        <div className="w-full max-w-[1440px] flex">
-          <Sidebar activeStep="explore" />
+    <WorkspaceLayout
+      step="explore"
+      title={project?.ideaTitle || "경쟁 탐색"}
+      description="AI가 비슷한 문제를 푸는 실제 서비스를 찾아 내 아이디어와 비교해요."
+      actions={
+        <>
+          <Button variant="ghost" icon={RotateCcw} onClick={() => navigate("/idea")}>
+            아이디어 수정
+          </Button>
+          <Button
+            iconRight={ArrowRight}
+            onClick={() => setIsBMCSelectOpen(true)}
+            disabled={!hasIdea}
+          >
+            BMC 작성
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-8">
+        {hasIdea && <IdeaSummary text={project.ideaContent} />}
 
-          <main className="flex-1 min-w-0 flex flex-col self-stretch">
-            <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <h1 className="text-2xl font-bold text-gray-900 truncate">
-                {project?.ideaTitle || "경쟁 탐색"}
-              </h1>
-            </header>
-
-            <div className="flex-1 px-12 py-8">
-              <div className="max-w-[1120px] flex flex-col gap-6">
-                {hasIdea && (
-                  <p className="rounded-2xl bg-[#F8FAFF] p-6 text-[#071642] leading-7 whitespace-pre-line">
-                    {project.ideaContent}
-                  </p>
-                )}
-
-                {competitors ? (
-                  <section>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold text-gray-900">
-                        유사 서비스 {competitors.length}개
-                      </h2>
-
-                      {competitors.length > 0 && (
-                        <button
-                          onClick={() => setIsListOpen(true)}
-                          className="text-sm font-bold text-blue-600 hover:underline"
-                        >
-                          자세히 보기
-                        </button>
-                      )}
-                    </div>
-
-                    {competitors.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-4">
-                        {competitors.map((service, index) => (
-                          <article
-                            key={service.serviceName || index}
-                            className="rounded-2xl border border-gray-200 p-5"
-                          >
-                            <h3 className="font-bold text-gray-900 mb-2">
-                              {service.serviceName}
-                            </h3>
-
-                            <p className="text-sm text-[#3D4770] leading-6">
-                              {service.differentiation}
-                            </p>
-                          </article>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">
-                        비슷한 서비스를 찾지 못했어요.
-                      </p>
-                    )}
-                  </section>
-                ) : (
-                  <div className="min-h-[320px] rounded-2xl border border-gray-200 flex flex-col items-center justify-center gap-5 text-center px-10">
-                    {!hasIdea ? (
-                      <>
-                        <p className="text-gray-500">먼저 아이디어를 입력해 주세요.</p>
-                        <Link to="/idea" className="font-bold text-blue-600">
-                          아이디어 입력하기
-                        </Link>
-                      </>
-                    ) : isSearching ? (
-                      <AILoading title="비슷한 서비스를 찾는 중이에요" />
-                    ) : (
-                      <>
-                        <button
-                          onClick={handleExplore}
-                          disabled={noneLeft}
-                          className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold inline-flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-                        >
-                          <Search size={18} />
-                          경쟁 서비스 탐색
-                        </button>
-
-                        {bmcLimit && (
-                          <p className="text-sm text-gray-500">
-                            오늘 {bmcLimit.remainingSearch}/{bmcLimit.searchLimit}회 남음
-                          </p>
-                        )}
-
-                        {error && <p className="text-sm text-red-500">{error}</p>}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+        {competitors ? (
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-900">
+                유사 서비스 <span className="text-accent">{competitors.length}</span>
+              </h2>
+              {competitors.length > 0 && (
+                <p className="text-xs text-gray-400">AI가 찾은 결과라 실제와 다를 수 있어요</p>
+              )}
             </div>
 
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-end gap-3 px-12 bg-white">
-              <button
-                onClick={() => navigate("/idea")}
-                className="h-11 px-5 rounded-xl border border-blue-200 text-blue-600 font-bold flex items-center gap-2 hover:bg-blue-50 transition"
-              >
-                <RotateCcw size={18} />
-                아이디어 수정
-              </button>
-
-              <button
-                onClick={() => setIsBMCSelectOpen(true)}
-                disabled={!hasIdea}
-                className="h-11 px-6 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                BMC 작성
-                <ArrowRight size={18} />
-              </button>
-            </footer>
-
-            <CompetitorListPanel
-              open={isListOpen}
-              onClose={() => setIsListOpen(false)}
-              services={competitors ?? []}
-            />
-            <BMCSelectModal
-              open={isBMCSelectOpen}
-              onClose={() => setIsBMCSelectOpen(false)}
-              onAI={() => navigate("/bmc/create")}
-              onWrite={() => navigate("/bmc/analyze")}
-            />
-          </main>
-        </div>
+            {competitors.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-3">
+                {competitors.map((service, index) => (
+                  <CompetitorCard key={service.serviceName || index} service={service} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Search}
+                title="비슷한 서비스를 찾지 못했어요"
+                description="아이디어가 새롭거나 설명이 짧을 수 있어요. 바로 BMC를 작성해도 괜찮아요."
+              />
+            )}
+          </section>
+        ) : !hasIdea ? (
+          <EmptyState
+            icon={PenLine}
+            title="먼저 아이디어를 입력해 주세요"
+            action={<Button variant="secondary" onClick={() => navigate("/idea")}>아이디어 입력하기</Button>}
+          />
+        ) : isSearching ? (
+          <div className="min-h-[300px] rounded-2xl border border-gray-200 flex items-center justify-center">
+            <AILoading title="비슷한 서비스를 찾는 중이에요" description="20초 정도 걸려요." />
+          </div>
+        ) : (
+          <EmptyState
+            icon={Search}
+            title="경쟁 서비스를 찾아볼까요?"
+            description={bmcLimit ? `오늘 ${bmcLimit.remainingSearch}/${bmcLimit.searchLimit}회 남았어요.` : undefined}
+            action={
+              <>
+                <Button variant="accent" icon={Search} onClick={handleExplore} disabled={noneLeft}>
+                  경쟁 서비스 탐색
+                </Button>
+                {error && <p className="text-sm text-red-500">{error}</p>}
+              </>
+            }
+          />
+        )}
       </div>
-    </MainLayout>
+
+      <BMCSelectModal
+        open={isBMCSelectOpen}
+        onClose={() => setIsBMCSelectOpen(false)}
+        onAI={() => navigate("/bmc/create")}
+        onWrite={() => navigate("/bmc/analyze")}
+      />
+    </WorkspaceLayout>
+  );
+}
+
+function CompetitorCard({ service }) {
+  const rows = [
+    ["타겟 고객", service.targetCustomer],
+    ["수익 모델", service.revenueModel],
+    ["핵심 기능", service.coreFeatures],
+  ].filter(([, value]) => value);
+
+  return (
+    <article className="rounded-2xl border border-gray-200 p-5 flex flex-col gap-4">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-bold text-gray-900">{service.serviceName}</h3>
+        {service.category && (
+          <span className="shrink-0 h-6 px-2 rounded-md bg-gray-100 text-xs font-medium text-gray-500 flex items-center">
+            {service.category}
+          </span>
+        )}
+      </div>
+
+      {service.differentiation && (
+        <p className="text-sm leading-6 text-gray-700 rounded-xl bg-accent-soft/60 px-4 py-3">
+          <span className="font-semibold text-accent">차별점 </span>
+          {service.differentiation}
+        </p>
+      )}
+
+      <dl className="flex flex-col gap-2 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex gap-3">
+            <dt className="w-16 shrink-0 text-gray-400">{label}</dt>
+            <dd className="text-gray-600 leading-6">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </article>
   );
 }
 

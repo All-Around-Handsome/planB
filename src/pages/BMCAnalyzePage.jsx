@@ -8,8 +8,8 @@ import {
 } from "../api/bmc";
 import { analyzeBmc } from "../api/bmcAi";
 
-import MainLayout from "../layouts/MainLayout";
-import Sidebar from "../components/Sidebar";
+import WorkspaceLayout from "../layouts/WorkspaceLayout";
+import Button from "../components/Button";
 import AILoading from "../components/AILoading";
 import BMCDisplayCanvas from "../components/BMCDisplayCanvas";
 
@@ -104,56 +104,48 @@ function BMCAnalyzePage() {
   };
 
   return (
-    <MainLayout>
-      <div className="w-full bg-white flex justify-center overflow-x-hidden">
-        <div className="w-full max-w-[1440px] flex">
-          <Sidebar activeStep="analyze" />
+    <WorkspaceLayout
+      step="analyze"
+      header={
+        <input
+          value={ideaTitle}
+          onChange={(e) => setIdeaTitle(e.target.value)}
+          placeholder="BMC 제목"
+          aria-label="BMC 제목"
+          className="w-full text-2xl md:text-[28px] font-bold tracking-tight text-gray-900 placeholder:text-gray-300 outline-none bg-transparent"
+        />
+      }
+      description="BMC를 채우면 AI가 타당성 점수, 리스크, 실행 계획을 알려 줘요."
+      actions={
+        <>
+          <p className={`text-sm ${error ? "text-red-500" : "text-gray-400"}`}>
+            {error ||
+              (!isReady
+                ? "가치 제안과 고객 세그먼트는 꼭 입력해 주세요."
+                : bmcLimit
+                  ? `오늘 ${bmcLimit.remainingAnalysis}/${bmcLimit.analysisLimit}회 남음`
+                  : "")}
+          </p>
 
-          <main className="flex-1 min-w-0 flex flex-col self-stretch">
-            <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <input
-                value={ideaTitle}
-                onChange={(e) => setIdeaTitle(e.target.value)}
-                placeholder="제목"
-                className="w-full text-2xl font-bold text-gray-900 placeholder:text-gray-400 outline-none"
-              />
-            </header>
-
-            <div className="flex-1 px-12 py-8">
-              <div className="max-w-[1120px]">
-                {isAnalyzing ? (
-                  <div className="min-h-[420px] flex items-center justify-center">
-                    <AILoading title="BMC를 분석하는 중이에요" />
-                  </div>
-                ) : (
-                  <BMCDisplayCanvas data={bmc} onChange={handleChange} />
-                )}
-              </div>
-            </div>
-
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between gap-6 px-12 bg-white">
-              <p className={`text-sm ${error ? "text-red-500" : "text-gray-500"}`}>
-                {error ||
-                  (!isReady
-                    ? "가치 제안과 고객 세그먼트를 입력해 주세요."
-                    : bmcLimit
-                    ? `오늘 ${bmcLimit.remainingAnalysis}/${bmcLimit.analysisLimit}회 남음`
-                    : "")}
-              </p>
-
-              <button
-                onClick={handleAnalyze}
-                disabled={!isReady || isAnalyzing || noneLeft}
-                className="h-11 px-6 shrink-0 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                <Sparkles size={18} />
-                분석하기
-              </button>
-            </footer>
-          </main>
+          <Button
+            variant="accent"
+            icon={Sparkles}
+            onClick={handleAnalyze}
+            disabled={!isReady || isAnalyzing || noneLeft}
+          >
+            분석하기
+          </Button>
+        </>
+      }
+    >
+      {isAnalyzing ? (
+        <div className="min-h-[420px] rounded-2xl border border-gray-200 flex items-center justify-center">
+          <AILoading title="BMC를 분석하는 중이에요" description="40초~1분 정도 걸려요. 화면을 닫지 말아 주세요." />
         </div>
-      </div>
-    </MainLayout>
+      ) : (
+        <BMCDisplayCanvas data={bmc} onChange={handleChange} />
+      )}
+    </WorkspaceLayout>
   );
 }
 

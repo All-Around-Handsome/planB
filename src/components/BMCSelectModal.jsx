@@ -1,119 +1,52 @@
-import { LayoutTemplate, BarChart3 } from "lucide-react";
+import { ChevronRight, PenLine, Sparkles } from "lucide-react";
+import Modal from "./Modal";
 
-function BMCSelectModal({
-  open,
-  onClose,
-  onAI,
-  onWrite,
-}) {
-  if (!open) return null;
+const CHOICES = [
+  {
+    key: "ai",
+    icon: Sparkles,
+    title: "AI로 생성",
+    description: "아이디어를 바탕으로 9개 블록을 자동으로 채워요.",
+  },
+  {
+    key: "write",
+    icon: PenLine,
+    title: "직접 작성",
+    description: "BMC를 직접 쓰고 AI 분석을 받아요.",
+  },
+];
+
+function BMCSelectModal({ open, onClose, onAI, onWrite }) {
+  const handlers = { ai: onAI, write: onWrite };
 
   return (
-    <div
-      className="
-        fixed
-        inset-0
-        bg-black/40
-        flex
-        items-center
-        justify-center
-        z-50
-      "
-    >
-      <div
-        className="
-          w-[520px]
-          rounded-3xl
-          bg-white
-          p-8
-          shadow-xl
-        "
-      >
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
-          BMC를 어떻게 작성할까요?
-        </h2>
-
-        <div className="grid grid-cols-2 gap-5">
-
-          {/* AI 생성 */}
+    <Modal open={open} onClose={onClose} title="BMC를 어떻게 작성할까요?">
+      <div className="flex flex-col gap-2">
+        {CHOICES.map(({ key, icon: Icon, title, description }) => (
           <button
-            onClick={onAI}
-            className="
-              rounded-2xl
-              border
-              border-gray-200
-              bg-white
-              p-6
-              text-left
-              hover:border-blue-500
-              hover:bg-blue-50/30
-              transition
-              active:scale-[0.98]
-            "
+            key={key}
+            onClick={handlers[key]}
+            className="group w-full rounded-xl border border-gray-200 p-4 flex items-center gap-4 text-left hover:border-gray-300 hover:bg-gray-50 transition-colors"
           >
-            <LayoutTemplate
-              className="text-blue-600 mb-4"
-              size={28}
-            />
-
-            <h3 className="font-bold text-gray-900">
-              AI로 생성
-            </h3>
+            <span className="w-10 h-10 shrink-0 rounded-lg bg-accent-soft text-accent flex items-center justify-center">
+              <Icon size={18} />
+            </span>
+            <span className="flex-1">
+              <span className="block font-semibold text-gray-900">{title}</span>
+              <span className="block mt-0.5 text-sm text-gray-500">{description}</span>
+            </span>
+            <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-500" />
           </button>
-
-
-          {/* 직접 작성 */}
-          <button
-            onClick={onWrite}
-            className="
-              rounded-2xl
-              border
-              border-gray-200
-              bg-white
-              p-6
-              text-left
-              hover:border-blue-500
-              hover:bg-blue-50/30
-              transition
-              active:scale-[0.98]
-            "
-          >
-            <BarChart3
-              className="text-blue-600 mb-4"
-              size={28}
-            />
-
-            <h3 className="font-bold text-gray-900">
-              직접 작성
-            </h3>
-          </button>
-
-        </div>
-
-
-        {/* 취소 */}
-        <button
-          onClick={onClose}
-          className="
-            mt-6
-            w-full
-            h-11
-            rounded-xl
-            border
-            border-gray-200
-            text-gray-600
-            font-bold
-            hover:bg-gray-200
-            hover:border-gray-300
-            transition
-            active:scale-[0.98]
-          "
-        >
-          취소
-        </button>
-
+        ))}
       </div>
-    </div>
+
+      <button
+        onClick={onClose}
+        className="mt-4 w-full h-10 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100"
+      >
+        취소
+      </button>
+    </Modal>
   );
 }
 

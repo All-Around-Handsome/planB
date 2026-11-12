@@ -24,50 +24,31 @@ function Textarea({
   return (
     <div className="w-full flex flex-col gap-2">
       {label && (
-        <label className="text-sm font-medium text-gray-700">
-          {label}
-        </label>
+        <label className="text-sm font-semibold text-gray-900">{label}</label>
       )}
 
-      <div className="relative">
+      <div className="relative rounded-2xl border border-gray-200 bg-white transition focus-within:border-gray-400 focus-within:ring-4 focus-within:ring-gray-100">
         <textarea
           value={value}
           onChange={handleChange}
           disabled={disabled}
           placeholder={placeholder}
           rows={rows}
-          className="
-            w-full
-            px-4 py-4
-            rounded-2xl
-            bg-white
-            border border-gray-300
-            text-gray-800
-            text-base
-            resize-none
-            outline-none
-            transition-all duration-300
-            placeholder:text-gray-400
-            focus:border-blue-500
-            focus:ring-4 focus:ring-blue-100
-            disabled:bg-gray-100
-            disabled:text-gray-400
-            disabled:cursor-not-allowed
-          "
+          className="block w-full px-5 pt-4 pb-10 rounded-2xl bg-transparent text-[16px] leading-7 text-gray-900 resize-none outline-none placeholder:text-gray-400 disabled:text-gray-400"
         />
 
         <p
-          className={`absolute bottom-4 right-4 text-sm ${
+          className={`absolute bottom-3 right-4 text-xs tabular-nums ${
             isOverLimit ? "text-red-500" : "text-gray-400"
           }`}
         >
-          {value.length} / {limit}
+          {value.length.toLocaleString()} / {limit.toLocaleString()}
         </p>
       </div>
 
       {isOverLimit && (
         <p className="text-sm text-red-500">
-          아이디어 탐색은 {limit}자 이하일 때 가능합니다.
+          아이디어 탐색은 {limit.toLocaleString()}자 이하일 때 가능해요.
         </p>
       )}
     </div>

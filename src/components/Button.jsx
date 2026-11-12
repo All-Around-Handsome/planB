@@ -1,40 +1,53 @@
-import { ArrowRight } from "lucide-react";
+const VARIANTS = {
+  primary:
+    "bg-gray-900 text-white hover:bg-gray-700 disabled:bg-gray-200 disabled:text-gray-400",
+  accent:
+    "bg-accent text-white hover:bg-accent-hover disabled:bg-gray-200 disabled:text-gray-400",
+  secondary:
+    "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 disabled:text-gray-400",
+  ghost: "text-gray-600 hover:bg-gray-100 hover:text-gray-900 disabled:text-gray-300",
+  danger: "text-red-600 hover:bg-red-50 disabled:text-gray-300",
+};
 
-function Button({ children = "시작하기", onClick, disabled = false }) {
+const SIZES = {
+  sm: "h-9 px-3.5 text-sm gap-1.5 rounded-lg",
+  md: "h-11 px-5 text-[15px] gap-2 rounded-xl",
+  lg: "h-13 px-7 text-base gap-2 rounded-xl",
+};
+
+function Button({
+  children,
+  onClick,
+  disabled = false,
+  variant = "primary",
+  size = "md",
+  icon: Icon,
+  iconRight: IconRight,
+  type = "button",
+  className = "",
+  ...rest
+}) {
+  const iconSize = size === "sm" ? 15 : 17;
+
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
-      className="
-        group
-        inline-flex items-center justify-center gap-4
-        min-w-[200px] h-14 px-8
-        rounded-full
-        bg-white
-        border border-blue-500
-        text-blue-500
-        font-semibold text-lg
-        shadow-[0_8px_24px_rgba(59,130,246,0.18)]
-        transition-all duration-300
-        hover:bg-blue-50 hover:shadow-[0_10px_30px_rgba(59,130,246,0.28)]
-        active:scale-95
-        disabled:border-gray-300 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed
-      "
+      className={`
+        inline-flex items-center justify-center shrink-0
+        font-semibold whitespace-nowrap
+        transition-colors duration-150
+        disabled:cursor-not-allowed
+        ${VARIANTS[variant]}
+        ${SIZES[size]}
+        ${className}
+      `}
+      {...rest}
     >
-      <span
-        className="
-          flex items-center justify-center
-          w-8 h-8 rounded-full
-          bg-blue-500 text-white
-          transition-all duration-300
-          group-hover:bg-blue-600
-          group-disabled:bg-gray-300
-        "
-      >
-        <ArrowRight size={20} strokeWidth={2.5} />
-      </span>
-
-      <span>{children}</span>
+      {Icon && <Icon size={iconSize} strokeWidth={2} />}
+      {children}
+      {IconRight && <IconRight size={iconSize} strokeWidth={2} />}
     </button>
   );
 }

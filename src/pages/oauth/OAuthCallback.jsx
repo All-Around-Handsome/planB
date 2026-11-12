@@ -33,16 +33,22 @@ function OAuthCallback({ provider, label }) {
   }, [login, provider, label]);
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 h-screen">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5 px-5 text-center">
       {failed ? (
         <>
-          <p className="text-gray-700">{label} 로그인에 실패했어요.</p>
-          <Link to="/auth" className="font-bold text-blue-600">
+          <p className="text-gray-900 font-semibold">{label} 로그인에 실패했어요.</p>
+          <Link
+            to="/auth"
+            className="h-10 px-4 inline-flex items-center rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700"
+          >
             다시 로그인
           </Link>
         </>
       ) : (
-        <p className="text-gray-500">{label} 로그인 중...</p>
+        <>
+          <div className="w-8 h-8 rounded-full border-2 border-gray-100 border-t-accent animate-spin" />
+          <p className="text-sm text-gray-500">{label} 로그인 중...</p>
+        </>
       )}
     </div>
   );

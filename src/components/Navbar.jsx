@@ -1,14 +1,20 @@
 import axios from "axios";
 
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { LogOut } from "lucide-react";
 import { useLogin } from "../contexts/LoginContext.jsx";
 import { getProfile } from "../api/bmc";
 import { BACKEND_URL } from "../api/config";
+import Logo from "./Logo";
 
+const LINKS = [
+  { to: "/idea", label: "새 아이디어" },
+  { to: "/bmc/analyze", label: "BMC 분석" },
+  { to: "/my", label: "내 BMC" },
+];
 
 function Navbar() {
-
   const { isLogin, logout } = useLogin();
   const [profile, setProfile] = useState(null);
 
@@ -43,81 +49,83 @@ function Navbar() {
           },
         }
       );
-
-      logout();
-      window.location.href = "/";
     } catch (error) {
-      if (error.response?.status === 401) {
-        // 토큰이 만료된 경우에도 프론트는 로그아웃 처리
-        logout();
-        window.location.href = "/";
-        return;
+      // 토큰이 만료됐어도 화면에서는 로그아웃한다
+      if (error.response?.status !== 401) {
+        console.error("로그아웃 실패", error);
       }
-
-      console.error("로그아웃 실패", error);
     }
+
+    logout();
+    window.location.href = "/";
   };
 
   return (
-    <nav className="w-full min-w-[1440px] h-20 bg-white border-b border-gray-200">
-      <div className="max-w-[1440px] h-full mx-auto px-10 flex items-center justify-between">
-        {/* Left */}
-        <Link to="/" className="flex items-center">
-          <img
-            src="/Logo.png"
-            alt="PlanB Logo"
-            className="h-11 w-auto object-contain"
-          />
+    <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <div className="max-w-6xl h-16 mx-auto px-5 md:px-8 flex items-center justify-between gap-6">
+        <Link to="/" aria-label="PlanB 홈">
+          <Logo />
         </Link>
 
-        {/* Center */}
-        <div className="flex items-center gap-12 text-gray-600 text-lg font-medium">
-          <Link to="/">Home</Link>
-          <Link to="/idea">아이디어 입력</Link>
-          <Link to="/bmc/analyze">BMC 분석</Link>
-          <Link to="/my">마이페이지</Link>
-        </div>
+        <nav className="hidden md:flex items-center gap-1">
+          {LINKS.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `px-3.5 py-2 rounded-lg text-[15px] font-medium transition-colors ${
+                  isActive
+                    ? "text-gray-900 bg-gray-100"
+                    : "text-gray-500 hover:text-gray-900"
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
-        {/* Right */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {!isLogin ? (
             <Link
               to="/auth"
-              className="text-gray-700 text-lg font-medium hover:text-blue-500 transition"
+              className="h-9 px-4 inline-flex items-center rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
             >
               로그인
             </Link>
           ) : (
             <>
-              {profile?.profileImageUrl ? (
-                <img
-                  src={profile.profileImageUrl}
-                  alt="프로필"
-                  className="w-9 h-9 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                  {profile?.name?.charAt(0) || "U"}
-                </div>
-              )}
+              <Link to="/my" className="flex items-center gap-2.5">
+                {profile?.profileImageUrl ? (
+                  <img
+                    src={profile.profileImageUrl}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-cover ring-1 ring-gray-200"
+                  />
+                ) : (
+                  <span className="w-8 h-8 rounded-full bg-gray-900 text-white text-sm flex items-center justify-center font-semibold">
+                    {profile?.name?.charAt(0) || "U"}
+                  </span>
+                )}
 
-              <span className="text-gray-700 text-lg">
-                {profile?.name ? `${profile.name}님` : "사용자님"}
-              </span>
-
-              <div className="w-px h-5 bg-gray-300" />
+                <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                  {profile?.name || "사용자"}
+                </span>
+              </Link>
 
               <button
                 onClick={handleLogout}
-                className="text-gray-500 hover:text-red-500 transition"
+                aria-label="로그아웃"
+                title="로그아웃"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               >
-                로그아웃
+                <LogOut size={17} />
               </button>
             </>
           )}
         </div>
       </div>
-    </nav>
+    </header>
   );
 }
 

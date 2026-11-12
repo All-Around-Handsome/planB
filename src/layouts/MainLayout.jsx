@@ -1,14 +1,14 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-function MainLayout({ children }) {
+function MainLayout({ children, footer = true }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      {children}
+      <div className="flex-1 flex flex-col">{children}</div>
 
-      <Footer />
+      {footer && <Footer />}
     </div>
   );
 }

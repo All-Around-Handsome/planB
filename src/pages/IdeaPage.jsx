@@ -7,13 +7,13 @@ import {
   TrendingUp,
   Target,
   FileText,
-  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 
 import { getBmcLimit } from "../api/bmc";
 
-import MainLayout from "../layouts/MainLayout";
-import Sidebar from "../components/Sidebar";
+import WorkspaceLayout from "../layouts/WorkspaceLayout";
+import Button from "../components/Button";
 import Textarea from "../components/Textarea";
 import DraftRestoreModal from "../components/DraftRestoreModal";
 import BMCSelectModal from "../components/BMCSelectModal";
@@ -34,8 +34,8 @@ const STEP_OPTIONS = [
 ];
 
 const SEARCH_OPTIONS = [
-  { id: "withSearch", icon: Target, title: "경쟁 탐색 후 작성" },
-  { id: "withoutSearch", icon: FileText, title: "바로 작성" },
+  { id: "withSearch", icon: Target, title: "경쟁 탐색 후 작성", description: "비슷한 서비스를 먼저 찾아 비교해요" },
+  { id: "withoutSearch", icon: FileText, title: "바로 작성", description: "BMC 생성이나 직접 작성으로 넘어가요" },
 ];
 
 const MIN_IDEA_LENGTH = 10;
@@ -50,10 +50,10 @@ const EMPTY_FORM = {
 function OptionGroup({ label, options, value, onChange, columns }) {
   return (
     <section>
-      <h2 className="text-sm font-bold text-gray-900 mb-3">{label}</h2>
+      <h2 className="text-sm font-semibold text-gray-900 mb-3">{label}</h2>
 
-      <div className={`grid gap-3 ${columns}`}>
-        {options.map(({ id, icon: Icon, title }) => {
+      <div className={`grid gap-2 ${columns}`}>
+        {options.map(({ id, icon: Icon, title, description }) => {
           const active = value === id;
 
           return (
@@ -62,26 +62,21 @@ function OptionGroup({ label, options, value, onChange, columns }) {
               type="button"
               aria-pressed={active}
               onClick={() => onChange(id)}
-              className={`
-                h-14
-                rounded-xl
-                border
-                flex
-                items-center
-                justify-center
-                gap-2
-                text-sm
-                font-bold
-                transition
-                ${
-                  active
-                    ? "border-blue-500 bg-blue-50 text-blue-600"
-                    : "border-gray-200 text-gray-700 hover:border-blue-300"
-                }
-              `}
+              className={`min-h-12 px-4 py-3 rounded-xl border text-left flex items-center gap-3 transition-colors ${
+                active
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+              }`}
             >
-              <Icon size={18} />
-              {title}
+              <Icon size={17} className={active ? "text-white" : "text-gray-400"} />
+              <span className="flex flex-col">
+                <span className="text-sm font-semibold">{title}</span>
+                {description && (
+                  <span className={`text-xs mt-0.5 ${active ? "text-white/70" : "text-gray-400"}`}>
+                    {description}
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -160,87 +155,77 @@ function IdeaPage() {
   };
 
   return (
-    <MainLayout>
+    <WorkspaceLayout
+      step="idea"
+      header={
+        <input
+          value={form.ideaTitle}
+          onChange={(e) => updateForm({ ideaTitle: e.target.value })}
+          placeholder="아이디어 제목"
+          aria-label="아이디어 제목"
+          className="w-full text-2xl md:text-[28px] font-bold tracking-tight text-gray-900 placeholder:text-gray-300 outline-none bg-transparent"
+        />
+      }
+      description="어떤 문제를, 누구를 위해, 어떻게 해결하는지 적어 주세요."
+      actions={
+        <>
+          {isIdeaTooShort ? (
+            <p className="text-sm text-red-500" role="status">
+              아이디어를 {MIN_IDEA_LENGTH}자 이상 입력해 주세요. (지금 {ideaLength}자)
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400">
+              {bmcLimit &&
+                `오늘 남은 횟수 · 탐색 ${bmcLimit.remainingSearch} · 생성 ${bmcLimit.remainingGeneration} · 분석 ${bmcLimit.remainingAnalysis}`}
+            </p>
+          )}
+
+          <Button onClick={handleSubmit} disabled={!canSubmit} iconRight={ArrowRight}>
+            다음
+          </Button>
+        </>
+      }
+    >
       <DraftRestoreModal
         open={!!draftData}
         onRestore={handleRestoreDraft}
         onNew={handleNewProject}
       />
-      <div className="w-full bg-white flex justify-center overflow-x-hidden">
-        <div className="w-full max-w-[1440px] flex">
-          <Sidebar activeStep="idea" />
 
-          <main className="flex-1 min-w-0 flex flex-col">
-            <header className="h-[72px] border-b border-gray-200 flex items-center px-12">
-              <input
-                value={form.ideaTitle}
-                onChange={(e) => updateForm({ ideaTitle: e.target.value })}
-                placeholder="아이디어 제목"
-                className="w-full text-2xl font-bold text-gray-900 placeholder:text-gray-400 outline-none"
-              />
-            </header>
+      <div className="flex flex-col gap-8">
+        <Textarea
+          placeholder="예) 대학생들이 학기마다 비싼 전공서적을 사는 부담을 줄이기 위해, 같은 학교 학생끼리 학과별로 중고 책을 찾고 캠퍼스에서 직거래하는 앱"
+          value={form.ideaContent}
+          onChange={(ideaContent) => updateForm({ ideaContent })}
+          rows={8}
+          limit={1000}
+          maxLimit={1500}
+        />
 
-            <div className="flex-1 px-12 py-8">
-              <div className="max-w-[1120px] flex flex-col gap-6">
-                <Textarea
-                  placeholder="어떤 문제를, 누구를 위해, 어떻게 해결하나요?"
-                  value={form.ideaContent}
-                  onChange={(ideaContent) => updateForm({ ideaContent })}
-                  rows={10}
-                  limit={1000}
-                  maxLimit={1500}
-                />
+        <OptionGroup
+          label="지금 어느 단계인가요?"
+          options={STEP_OPTIONS}
+          value={form.selectedStep}
+          onChange={(selectedStep) => updateForm({ selectedStep })}
+          columns="grid-cols-2 md:grid-cols-4"
+        />
 
-                <OptionGroup
-                  label="진행 단계"
-                  options={STEP_OPTIONS}
-                  value={form.selectedStep}
-                  onChange={(selectedStep) => updateForm({ selectedStep })}
-                  columns="grid-cols-4"
-                />
-
-                <OptionGroup
-                  label="경쟁 탐색"
-                  options={SEARCH_OPTIONS}
-                  value={form.searchOption}
-                  onChange={(searchOption) => updateForm({ searchOption })}
-                  columns="grid-cols-2"
-                />
-              </div>
-            </div>
-
-            <footer className="h-[77px] shrink-0 border-t border-gray-200 flex items-center justify-between px-12 bg-white">
-              {isIdeaTooShort ? (
-                <p className="text-sm text-red-500" role="status">
-                  아이디어를 {MIN_IDEA_LENGTH}자 이상 입력해 주세요. (지금 {ideaLength}자)
-                </p>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  {bmcLimit &&
-                    `오늘 남은 횟수: 탐색 ${bmcLimit.remainingSearch} · 생성 ${bmcLimit.remainingGeneration} · 분석 ${bmcLimit.remainingAnalysis}`}
-                </p>
-              )}
-
-              <button
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-                className="h-12 px-8 rounded-xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                <Sparkles size={20} />
-                다음
-              </button>
-            </footer>
-
-            <BMCSelectModal
-              open={isBMCSelectOpen}
-              onClose={() => setIsBMCSelectOpen(false)}
-              onAI={() => navigate("/bmc/create")}
-              onWrite={() => navigate("/bmc/analyze")}
-            />
-          </main>
-        </div>
+        <OptionGroup
+          label="어떻게 진행할까요?"
+          options={SEARCH_OPTIONS}
+          value={form.searchOption}
+          onChange={(searchOption) => updateForm({ searchOption })}
+          columns="grid-cols-1 md:grid-cols-2"
+        />
       </div>
-    </MainLayout>
+
+      <BMCSelectModal
+        open={isBMCSelectOpen}
+        onClose={() => setIsBMCSelectOpen(false)}
+        onAI={() => navigate("/bmc/create")}
+        onWrite={() => navigate("/bmc/analyze")}
+      />
+    </WorkspaceLayout>
   );
 }
 
