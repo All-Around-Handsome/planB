@@ -3,6 +3,7 @@ package com.bmc.ai.config;
 import com.bmc.ai.ai.BmcAnalyzer;
 import com.bmc.ai.ai.BmcGenerator;
 import com.bmc.ai.ai.CompetitorAnalyzer;
+import com.bmc.ai.ai.IdeaTitler;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,8 @@ public class LangChainConfig {
 
     @Value("${voyage.api-key}") private String voyageApiKey;
     @Value("${voyage.model}")   private String voyageModel;
+
+    @Value("${anthropic.title-model:claude-haiku-4-5}") private String titleModel;
 
     /** LLM = Claude (아키텍처의 GPT-4o 박스를 대체). */
     @Bean
@@ -76,5 +80,18 @@ public class LangChainConfig {
     @Bean
     public BmcAnalyzer bmcAnalyzer(ChatModel chatModel) {
         return AiServices.create(BmcAnalyzer.class, chatModel);
+    }
+
+    /** 제목 짓기는 빠르고 저렴한 작은 모델로 따로 부른다. */
+    @Bean
+    public IdeaTitler ideaTitler() {
+        ChatModel titleChatModel = AnthropicChatModel.builder()
+                .apiKey(anthropicApiKey)
+                .modelName(titleModel)
+                .maxTokens(60)
+                .temperature(0.3)
+                .timeout(Duration.ofSeconds(15))
+                .build();
+        return AiServices.create(IdeaTitler.class, titleChatModel);
     }
 }

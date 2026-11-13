@@ -10,6 +10,7 @@ import com.bmc.ai.service.BmcAnalysisService;
 import com.bmc.ai.service.BmcGenerationService;
 import com.bmc.ai.service.CompetitorIngestionService;
 import com.bmc.ai.service.CompetitorSearchService;
+import com.bmc.ai.service.IdeaTitleService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,21 +28,30 @@ public class AiController {
     private final BmcGenerationService bmcGenerationService;
     private final BmcAnalysisService bmcAnalysisService;
     private final CompetitorIngestionService ingestionService;
+    private final IdeaTitleService ideaTitleService;
 
     public AiController(CompetitorSearchService competitorSearchService,
                         BmcGenerationService bmcGenerationService,
                         BmcAnalysisService bmcAnalysisService,
-                        CompetitorIngestionService ingestionService) {
+                        CompetitorIngestionService ingestionService,
+                        IdeaTitleService ideaTitleService) {
         this.competitorSearchService = competitorSearchService;
         this.bmcGenerationService = bmcGenerationService;
         this.bmcAnalysisService = bmcAnalysisService;
         this.ingestionService = ingestionService;
+        this.ideaTitleService = ideaTitleService;
     }
 
     /** S-001 + S-002: 유사 경쟁 서비스 탐색 및 비교 분석. */
     @PostMapping("/competitors")
     public CompetitorAnalysis searchCompetitors(@Valid @RequestBody IdeaRequest req) {
         return competitorSearchService.searchAndAnalyze(req.idea());
+    }
+
+    /** 제목을 비워 둔 아이디어에 짧은 제목을 지어 준다. */
+    @PostMapping("/title")
+    public Map<String, String> suggestTitle(@Valid @RequestBody IdeaRequest req) {
+        return Map.of("title", ideaTitleService.suggest(req.idea()));
     }
 
     /** G-001: BMC 9항목 자동 생성. */
