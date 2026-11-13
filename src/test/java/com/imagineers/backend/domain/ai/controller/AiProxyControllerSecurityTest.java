@@ -59,6 +59,8 @@ class AiProxyControllerSecurityTest {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/bmc/ai/analyze").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/bmc/ai/title").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
 
         verify(aiProxyService, never()).generateBmc(any(), any());
     }

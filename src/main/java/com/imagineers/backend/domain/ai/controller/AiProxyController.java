@@ -30,6 +30,12 @@ public class AiProxyController {
         return ApiResponse.success(aiProxyService.searchCompetitors(userId, body));
     }
 
+    // 최종 주소: POST /api/bmc/ai/title (횟수 차감 없음, 로그인 필요)
+    @PostMapping("/title")
+    public ApiResponse<JsonNode> suggestTitle(@RequestBody JsonNode body) {
+        return ApiResponse.success(aiProxyService.suggestTitle(body));
+    }
+
     // 최종 주소: POST /api/bmc/ai/generate
     @PostMapping("/generate")
     public ApiResponse<JsonNode> generateBmc(

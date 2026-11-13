@@ -99,6 +99,28 @@ class AiProxyServiceTest {
     }
 
     @Test
+    void 제목_생성은_횟수를_쓰지_않고_AI_결과를_돌려준다() {
+        ai.expect(requestTo("http://ai/api/ai/title")).andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("{\"title\":\"재고 관리 앱\"}", MediaType.APPLICATION_JSON));
+
+        JsonNode result = service.suggestTitle(body);
+
+        assertThat(result.get("title").asText()).isEqualTo("재고 관리 앱");
+        verify(limitService, never()).tryConsumeSearch(any());
+        verify(limitService, never()).tryConsumeGeneration(any());
+        ai.verify();
+    }
+
+    @Test
+    void 제목_생성_요청이_크면_AI를_부르지_않고_거절한다() {
+        JsonNode big = mapper.getNodeFactory().textNode("가".repeat(3_001));
+
+        assertThatThrownBy(() -> service.suggestTitle(big))
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_REQUEST);
+        ai.verify();
+    }
+
+    @Test
     void 너무_큰_요청은_횟수를_쓰지_않고_거절한다() {
         JsonNode big = mapper.getNodeFactory().textNode("가".repeat(20_001));
 
