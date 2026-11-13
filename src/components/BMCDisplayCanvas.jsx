@@ -1,4 +1,5 @@
 import { BMC_FIELDS } from "../utils/bmc";
+import BMCText from "./BMCText";
 
 // BMC 표준 배치 (넓은 화면 10칸 기준)
 const LAYOUT = {
@@ -55,9 +56,7 @@ function BMCDisplayCanvas({ data, onChange }) {
                 className="flex-1 w-full min-h-[110px] bg-transparent resize-none outline-none text-sm text-gray-800 leading-6 placeholder:text-gray-300"
               />
             ) : (
-              <p className="text-sm text-gray-700 leading-6 whitespace-pre-line break-words">
-                {data[key] || <span className="text-gray-300">비어 있음</span>}
-              </p>
+              <BMCText text={data[key]} />
             )}
           </div>
         );

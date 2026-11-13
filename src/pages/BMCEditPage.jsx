@@ -7,6 +7,7 @@ import { getBmcDetail, updateBmcItem } from "../api/bmc";
 import MainLayout from "../layouts/MainLayout";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
+import BMCText from "../components/BMCText";
 
 import { BMC_FIELDS, getIdeaTitle } from "../utils/bmc";
 
@@ -87,8 +88,8 @@ function BMCItemCard({ label, item, layout, isEditing, saving, onStart, onSave, 
         <Pencil size={13} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
       </span>
 
-      <span className="flex-1 text-sm leading-6 text-gray-700 whitespace-pre-line break-words">
-        {item.content || <span className="text-gray-300">비어 있음 · 눌러서 작성</span>}
+      <span className="flex-1">
+        <BMCText text={item.content} empty="비어 있음 · 눌러서 작성" />
       </span>
 
       {item.memo && (
