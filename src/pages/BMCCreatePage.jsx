@@ -15,6 +15,7 @@ import EmptyState from "../components/EmptyState";
 import IdeaSummary from "../components/IdeaSummary";
 
 import { getProjectData, saveProjectData } from "../utils/projectStorage";
+import { getProjectTitle, useProjectTitle } from "../utils/ideaTitle";
 import {
   STAGE_CODES,
   STAGE_LABELS,
@@ -26,6 +27,7 @@ function BMCCreatePage() {
   const navigate = useNavigate();
 
   const [project] = useState(() => getProjectData());
+  const ideaTitle = useProjectTitle(project);
   const [bmcLimit, setBmcLimit] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -57,7 +59,8 @@ function BMCCreatePage() {
       });
 
       const saved = await saveGeneratedBmc({
-        ideaText: buildIdeaText(project.ideaTitle, project.ideaContent),
+        // AI 제목이 생성 도중에 도착했을 수 있으니 저장된 값을 다시 읽는다
+        ideaText: buildIdeaText(getProjectTitle(getProjectData() ?? project), project.ideaContent),
         stage: STAGE_CODES[project.selectedStep],
         bmcType: "AI_GENERATED",
         items: bmcToItems(aiResult),
@@ -70,7 +73,7 @@ function BMCCreatePage() {
 
       const id = saved.data.bmcRecordId;
 
-      saveProjectData({ ...project, lastBmcRecordId: id });
+      saveProjectData({ ...getProjectData(), lastBmcRecordId: id });
       navigate(`/bmc/result/${id}`);
     } catch (error) {
       console.error("BMC 생성 실패", error);
@@ -96,7 +99,7 @@ function BMCCreatePage() {
   return (
     <WorkspaceLayout
       step="create"
-      title={project?.ideaTitle || "BMC 생성"}
+      title={ideaTitle || "BMC 생성"}
       description="아이디어를 바탕으로 AI가 비즈니스 모델 캔버스 9개 블록을 채워요."
       actions={
         <>

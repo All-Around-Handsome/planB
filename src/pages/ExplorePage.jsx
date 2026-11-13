@@ -13,11 +13,13 @@ import IdeaSummary from "../components/IdeaSummary";
 import BMCSelectModal from "../components/BMCSelectModal";
 
 import { getProjectData, saveProjectData } from "../utils/projectStorage";
+import { useProjectTitle } from "../utils/ideaTitle";
 
 function ExplorePage() {
   const navigate = useNavigate();
 
   const [project] = useState(() => getProjectData());
+  const ideaTitle = useProjectTitle(project);
   const [competitors, setCompetitors] = useState(
     () => project?.exploreResult ?? null
   );
@@ -51,7 +53,8 @@ function ExplorePage() {
       setCompetitors(found);
 
       // 다시 들어와도 횟수를 또 쓰지 않도록 결과를 남긴다
-      saveProjectData({ ...project, exploreResult: found });
+      // 그 사이 도착한 AI 제목을 덮어쓰지 않도록 저장된 값을 다시 읽는다
+      saveProjectData({ ...getProjectData(), exploreResult: found });
     } catch (e) {
       console.error(e);
 
@@ -72,21 +75,20 @@ function ExplorePage() {
   return (
     <WorkspaceLayout
       step="explore"
-      title={project?.ideaTitle || "경쟁 탐색"}
+      title={ideaTitle || "경쟁 탐색"}
       description="AI가 비슷한 문제를 푸는 실제 서비스를 찾아 내 아이디어와 비교해요."
+      // 탐색할지 먼저 고르게 하고, 결과가 나온 뒤에만 다음 단계 버튼을 보여 준다
       actions={
-        <>
-          <Button variant="ghost" icon={RotateCcw} onClick={() => navigate("/idea")}>
-            아이디어 수정
-          </Button>
-          <Button
-            iconRight={ArrowRight}
-            onClick={() => setIsBMCSelectOpen(true)}
-            disabled={!hasIdea}
-          >
-            BMC 작성
-          </Button>
-        </>
+        competitors && (
+          <>
+            <Button variant="ghost" icon={RotateCcw} onClick={() => navigate("/idea")}>
+              아이디어 수정
+            </Button>
+            <Button iconRight={ArrowRight} onClick={() => setIsBMCSelectOpen(true)}>
+              BMC 작성
+            </Button>
+          </>
+        )
       }
     >
       <div className="flex flex-col gap-8">
@@ -137,6 +139,13 @@ function ExplorePage() {
                 <Button variant="accent" icon={Search} onClick={handleExplore} disabled={noneLeft}>
                   경쟁 서비스 탐색
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setIsBMCSelectOpen(true)}
+                  className="text-sm text-gray-500 underline-offset-4 hover:text-gray-900 hover:underline"
+                >
+                  탐색 없이 바로 BMC 작성
+                </button>
                 {error && <p className="text-sm text-red-500">{error}</p>}
               </>
             }

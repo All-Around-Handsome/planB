@@ -25,6 +25,7 @@ import {
   saveDraftData,
   removeDraftData,
 } from "../utils/projectStorage";
+import { requestIdeaTitle } from "../utils/ideaTitle";
 
 const STEP_OPTIONS = [
   { id: "idea", icon: Lightbulb, title: "아이디어" },
@@ -136,16 +137,23 @@ function IdeaPage() {
   // AI 서버가 10자 미만 아이디어를 거절하므로 미리 안내한다
   const ideaLength = form.ideaContent.trim().length;
   const isIdeaTooShort = ideaLength > 0 && ideaLength < MIN_IDEA_LENGTH;
-  const canSubmit = form.ideaTitle.trim() && ideaLength >= MIN_IDEA_LENGTH;
+  const canSubmit = ideaLength >= MIN_IDEA_LENGTH;
 
   const handleSubmit = () => {
+    const ideaTitle = form.ideaTitle.trim();
+
     saveProjectData({
-      ideaTitle: form.ideaTitle,
+      ideaTitle,
       ideaContent: form.ideaContent,
       selectedStep: form.selectedStep,
       searchOption: form.searchOption,
     });
     removeDraftData();
+
+    // 제목을 비워 두면 다음 화면으로 넘어가는 동안 AI가 제목을 짓는다
+    if (!ideaTitle) {
+      requestIdeaTitle(form.ideaContent);
+    }
 
     if (form.searchOption === "withSearch") {
       navigate("/explore");
@@ -161,12 +169,12 @@ function IdeaPage() {
         <input
           value={form.ideaTitle}
           onChange={(e) => updateForm({ ideaTitle: e.target.value })}
-          placeholder="아이디어 제목"
-          aria-label="아이디어 제목"
+          placeholder="아이디어 제목 (선택)"
+          aria-label="아이디어 제목 (선택)"
           className="w-full text-2xl md:text-[28px] font-bold tracking-tight text-gray-900 placeholder:text-gray-300 outline-none bg-transparent"
         />
       }
-      description="어떤 문제를, 누구를 위해, 어떻게 해결하는지 적어 주세요."
+      description="어떤 문제를, 누구를 위해, 어떻게 해결하는지 적어 주세요. 제목은 비워 두면 AI가 지어 줘요."
       actions={
         <>
           {isIdeaTooShort ? (

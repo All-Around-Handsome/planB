@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
@@ -14,6 +14,7 @@ import AILoading from "../components/AILoading";
 import BMCDisplayCanvas from "../components/BMCDisplayCanvas";
 
 import { getProjectData, saveProjectData } from "../utils/projectStorage";
+import { useIdeaTitleListener } from "../utils/ideaTitle";
 import { EMPTY_BMC, STAGE_CODES, bmcToItems } from "../utils/bmc";
 
 const TERM_TYPES = {
@@ -31,6 +32,10 @@ function BMCAnalyzePage() {
     () => state?.ideaTitle ?? project?.ideaTitle ?? ""
   );
   const [bmc, setBmc] = useState(() => state?.bmc ?? EMPTY_BMC);
+
+  // 제목을 비워 두고 왔다면 AI 제목이 도착할 때 빈 칸에만 채운다
+  const fillEmptyTitle = useCallback((title) => setIdeaTitle((prev) => prev || title), []);
+  useIdeaTitleListener(fillEmptyTitle);
 
   const [bmcLimit, setBmcLimit] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -62,7 +67,7 @@ function BMCAnalyzePage() {
       const analyzeResult = await analyzeBmc(bmc);
 
       const saved = await saveBmcAnalysis({
-        ideaText: ideaTitle.trim(),
+        ideaText: ideaTitle.trim() || "제목 없음",
         stage: STAGE_CODES[project?.selectedStep] || "VALIDATION",
         items: bmcToItems(bmc),
         validityScore: analyzeResult.viabilityScore,
@@ -84,7 +89,7 @@ function BMCAnalyzePage() {
 
       const id = saved.data.bmcRecordId;
 
-      saveProjectData({ ...project, lastBmcRecordId: id });
+      saveProjectData({ ...getProjectData(), lastBmcRecordId: id });
       navigate(`/bmc/analyze/result/${id}`);
     } catch (error) {
       console.error("BMC 분석 실패", error);
