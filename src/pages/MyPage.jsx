@@ -22,10 +22,11 @@ import MainLayout from "../layouts/MainLayout";
 import Button from "../components/Button";
 import EmptyState from "../components/EmptyState";
 
+// 분석을 받았는지(타당성 점수가 있는지)로 나눈다
 const FILTERS = [
-  ["all", "전체"],
-  ["ai", "AI 생성"],
-  ["direct", "직접 작성"],
+  ["all", "전체", () => true],
+  ["created", "생성한 BMC", (project) => project.score == null],
+  ["analyzed", "분석한 BMC", (project) => project.score != null],
 ];
 
 const PAGE_SIZE = 10;
@@ -123,7 +124,7 @@ function MyPage() {
         .toLowerCase()
         .includes(searchKeyword.toLowerCase());
 
-      const matchesFilter = filter === "all" || project.bmcTypeCode === filter;
+      const matchesFilter = FILTERS.find(([value]) => value === filter)[2](project);
 
       return matchesKeyword && matchesFilter;
     });
@@ -234,19 +235,24 @@ function MyPage() {
             </label>
 
             <div className="h-10 p-1 rounded-lg bg-gray-100 flex gap-1" role="tablist" aria-label="종류">
-              {FILTERS.map(([value, label]) => (
+              {FILTERS.map(([value, label, matches]) => (
                 <button
                   key={value}
                   role="tab"
                   aria-selected={filter === value}
                   onClick={() => handleFilterChange(value)}
-                  className={`flex-1 sm:flex-none px-3 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex-1 sm:flex-none px-3 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                     filter === value
                       ? "bg-white text-gray-900 shadow-sm"
                       : "text-gray-500 hover:text-gray-900"
                   }`}
                 >
                   {label}
+                  {isLoaded && (
+                    <span className="ml-1 text-xs text-gray-400 tabular-nums">
+                      {projects.filter(matches).length}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -268,7 +274,15 @@ function MyPage() {
           ) : filteredProjects.length === 0 ? (
             <EmptyState
               icon={projects.length === 0 ? Sparkles : Search}
-              title={projects.length === 0 ? "아직 만든 BMC가 없어요" : "검색 결과가 없어요"}
+              title={
+                projects.length === 0
+                  ? "아직 만든 BMC가 없어요"
+                  : searchKeyword
+                    ? "검색 결과가 없어요"
+                    : filter === "analyzed"
+                      ? "아직 분석한 BMC가 없어요"
+                      : "분석 전인 BMC가 없어요"
+              }
               description={projects.length === 0 ? "아이디어 한 줄로 첫 BMC를 만들어 보세요." : undefined}
               action={projects.length === 0 && <Button onClick={startNew}>첫 BMC 만들기</Button>}
             />
@@ -297,17 +311,16 @@ function MyPage() {
                     <p className="font-semibold text-gray-900 truncate group-hover:text-accent transition-colors">
                       {project.name}
                     </p>
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      {project.bmcType} · {formatDateTime(project.createdAt)}
+                    <p className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                      {/* 휴대폰에서는 분석 상태를 제목 아래에 둔다 */}
+                      <AnalysisBadge score={project.score} className="inline-flex sm:hidden" />
+                      <span className="truncate">
+                        {project.bmcType} · {formatDateTime(project.createdAt)}
+                      </span>
                     </p>
                   </button>
 
-                  {project.score != null && (
-                    <span className="hidden sm:flex shrink-0 items-baseline gap-0.5 text-sm">
-                      <span className="font-bold text-gray-900 tabular-nums">{project.score}</span>
-                      <span className="text-gray-300">/10</span>
-                    </span>
-                  )}
+                  <AnalysisBadge score={project.score} className="hidden sm:inline-flex" />
 
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -379,6 +392,19 @@ function MyPage() {
         </div>
       )}
     </MainLayout>
+  );
+}
+
+function AnalysisBadge({ score, className = "" }) {
+  return score != null ? (
+    <span className={`${className} shrink-0 h-6 sm:h-7 px-2 sm:px-2.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-semibold items-center gap-0.5 tabular-nums`}>
+      분석 {score}
+      <span className="font-medium text-emerald-600/60">/10</span>
+    </span>
+  ) : (
+    <span className={`${className} shrink-0 h-6 sm:h-7 px-2 sm:px-2.5 rounded-md bg-gray-100 text-gray-500 text-xs font-medium items-center`}>
+      분석 전
+    </span>
   );
 }
 
