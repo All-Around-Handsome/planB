@@ -79,7 +79,8 @@ public class SecurityConfig {
         // 허용할 프론트 주소 (React 개발 서버)
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://planb.semo3.com"
+                "https://planb.semo3.com",
+                "https://planb.smrcat.com"
                 ));
 
         // 허용할 HTTP 메서드
